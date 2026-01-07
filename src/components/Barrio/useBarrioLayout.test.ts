@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { calculateMatrixDimensions } from './matrixLayout'
+import { renderHook } from '@testing-library/react'
+import { useBarrioLayout } from './useBarrioLayout'
 
-describe('calculateMatrixDimensions', () => {
+describe('useBarrioLayout', () => {
   it('creates a grid that fits all citizens', () => {
     const testSizes = [100, 250, 500]
 
     testSizes.forEach((size) => {
-      const { rows, columns } = calculateMatrixDimensions(size)
+      const { result } = renderHook(() => useBarrioLayout(size))
+      const { rows, columns } = result.current
       expect(rows * columns).toBeGreaterThanOrEqual(size)
     })
   })
@@ -15,7 +17,8 @@ describe('calculateMatrixDimensions', () => {
     const testSizes = [100, 250, 500]
 
     testSizes.forEach((size) => {
-      const { rows, columns } = calculateMatrixDimensions(size)
+      const { result } = renderHook(() => useBarrioLayout(size))
+      const { rows, columns } = result.current
       expect(columns).toBeGreaterThan(rows)
     })
   })
@@ -24,7 +27,8 @@ describe('calculateMatrixDimensions', () => {
     const testSizes = [100, 250, 500]
 
     testSizes.forEach((size) => {
-      const { rows, columns } = calculateMatrixDimensions(size)
+      const { result } = renderHook(() => useBarrioLayout(size))
+      const { rows, columns } = result.current
       const aspectRatio = columns / rows
       expect(aspectRatio).toBeGreaterThanOrEqual(1.5)
     })
@@ -32,9 +36,9 @@ describe('calculateMatrixDimensions', () => {
 
   it('returns consistent results for same input', () => {
     const size = 300
-    const result1 = calculateMatrixDimensions(size)
-    const result2 = calculateMatrixDimensions(size)
+    const { result: result1 } = renderHook(() => useBarrioLayout(size))
+    const { result: result2 } = renderHook(() => useBarrioLayout(size))
 
-    expect(result1).toEqual(result2)
+    expect(result1.current).toEqual(result2.current)
   })
 })

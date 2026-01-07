@@ -1,0 +1,50 @@
+.wrapper {
+  width: 75%;
+  margin: 1rem auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.turnDisplay {
+  font-family: var(--font-title);
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  color: var(--flexoki-tx);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.endTurnButton {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  padding: 0.75rem 2rem;
+  background-color: var(--flexoki-red);
+  color: var(--flexoki-bg);
+  border: 2px solid var(--flexoki-red-dark);
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.endTurnButton:hover {
+  background-color: var(--flexoki-red-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.endTurnButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

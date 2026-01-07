@@ -1,4 +1,4 @@
-import type { Citizen as CitizenType } from '../../models/Citizen'
+import type { Citizen as CitizenType } from '../../types/Citizen'
 import styles from './Citizen.module.css'
 
 interface CitizenProps {

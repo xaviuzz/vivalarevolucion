@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { Citizen } from './Citizen'
-import { SocialClass, Citizen as CitizenType } from '../../models/Citizen'
+import { SocialClass, Citizen as CitizenType } from '../../types/Citizen'
 
 describe('Citizen', () => {
   it('renders without crashing', () => {

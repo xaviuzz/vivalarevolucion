@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { userEvent } from '@testing-library/user-event'
 import { describe, it, expect } from 'vitest'
 import { HomePage } from './HomePage'
 
@@ -39,5 +40,24 @@ describe('HomePage', () => {
     expect(obreros.length).toBeGreaterThan(0)
     expect(claseMedia.length).toBeGreaterThan(0)
     expect(elites.length).toBeGreaterThan(0)
+  })
+
+  it('displays turn counter starting at turn 1', () => {
+    render(<HomePage />)
+    expect(screen.getByText('Turno 1')).toBeInTheDocument()
+  })
+
+  it('advances turn when end turn button is clicked', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+
+    const button = screen.getByRole('button', { name: /acabar turno/i })
+    expect(screen.getByText('Turno 1')).toBeInTheDocument()
+
+    await user.click(button)
+    expect(screen.getByText('Turno 2')).toBeInTheDocument()
+
+    await user.click(button)
+    expect(screen.getByText('Turno 3')).toBeInTheDocument()
   })
 })

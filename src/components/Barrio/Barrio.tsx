@@ -1,13 +1,15 @@
 import { Citizen as CitizenComponent } from '../Citizen/Citizen'
-import type { Citizen, MatrixDimensions } from '../../models'
+import type { Citizen } from '../../types'
+import { useBarrioLayout } from './useBarrioLayout'
 import styles from './Barrio.module.css'
 
 interface BarrioProps {
   citizens: Citizen[]
-  dimensions: MatrixDimensions
 }
 
-export function Barrio({ citizens, dimensions }: BarrioProps) {
+export function Barrio({ citizens }: BarrioProps) {
+  const dimensions = useBarrioLayout(citizens.length)
+
   const gridStyle = {
     gridTemplateRows: `repeat(${dimensions.rows}, 1fr)`,
     gridTemplateColumns: `repeat(${dimensions.columns}, 1fr)`
