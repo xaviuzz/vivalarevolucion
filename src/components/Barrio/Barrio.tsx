@@ -8,14 +8,13 @@ interface BarrioProps {
 }
 
 export function Barrio({ citizens, dimensions }: BarrioProps) {
+  const gridStyle = {
+    gridTemplateRows: `repeat(${dimensions.rows}, 1fr)`,
+    gridTemplateColumns: `repeat(${dimensions.columns}, 1fr)`
+  }
+
   return (
-    <div
-      className={styles.grid}
-      style={{
-        gridTemplateRows: `repeat(${dimensions.rows}, 1fr)`,
-        gridTemplateColumns: `repeat(${dimensions.columns}, 1fr)`
-      }}
-    >
+    <div className={styles.grid} style={gridStyle}>
       {citizens.map((citizen) => (
         <CitizenComponent key={citizen.id} citizen={citizen} />
       ))}

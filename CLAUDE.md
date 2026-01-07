@@ -1,5 +1,126 @@
 # Proyecto VLR - Guía para Claude
 
+## Estilo de Código
+
+### No usar comentarios
+
+El código debe ser autoexplicativo. Nunca incluyas comentarios en el código TypeScript/JavaScript.
+
+#### ❌ Incorrecto
+
+```typescript
+export function HomePage() {
+  // Generate citizens once on mount
+  const barrio = useMemo(() => {
+    const citizens = generateCitizens()
+    return { citizens }
+  }, [])
+}
+```
+
+#### ✅ Correcto
+
+```typescript
+export function HomePage() {
+  const barrio = useMemo(() => {
+    const citizens = generateCitizens()
+    return { citizens }
+  }, [])
+}
+```
+
+### Extraer inline styles a variables
+
+Los objetos de estilo inline deben extraerse a variables constantes en lugar de definirlos directamente en el JSX.
+
+#### ❌ Incorrecto
+
+```typescript
+return (
+  <div
+    style={{
+      gridTemplateRows: `repeat(${rows}, 1fr)`,
+      gridTemplateColumns: `repeat(${columns}, 1fr)`
+    }}
+  >
+    {children}
+  </div>
+)
+```
+
+#### ✅ Correcto
+
+```typescript
+const gridStyle = {
+  gridTemplateRows: `repeat(${rows}, 1fr)`,
+  gridTemplateColumns: `repeat(${columns}, 1fr)`
+}
+
+return (
+  <div style={gridStyle}>
+    {children}
+  </div>
+)
+```
+
+### Componentes independientes
+
+Separa elementos principales de la UI en componentes independientes. No agrupes todo en un mismo contenedor si los elementos tienen responsabilidades diferentes.
+
+#### ❌ Incorrecto
+
+```typescript
+export function HomePage() {
+  return (
+    <div className={styles.container}>
+      <h1>VIVA LA REVOLUCION!!</h1>
+      <Barrio />
+    </div>
+  )
+}
+```
+
+#### ✅ Correcto
+
+```typescript
+export function HomePage() {
+  return (
+    <>
+      <Title />
+      <div className={styles.container}>
+        <Barrio />
+      </div>
+    </>
+  )
+}
+```
+
+### Diseño visual proporcional
+
+Cuando se especifica un ancho para un elemento contenedor (ej: 75%), el contenido debe escalar proporcionalmente para llenar ese espacio visualmente, no solo tener el contenedor con ese ancho.
+
+#### ❌ Incorrecto
+
+```css
+.title {
+  width: 75%;
+  font-size: 2rem; /* Tamaño fijo, no escala */
+}
+```
+
+#### ✅ Correcto
+
+```css
+.wrapper {
+  width: 75%;
+}
+
+.title {
+  width: 100%;
+  font-size: clamp(3rem, 8vw, 10rem); /* Escala proporcionalmente */
+}
+```
+
 ## Testing
 
 ### Principios generales
