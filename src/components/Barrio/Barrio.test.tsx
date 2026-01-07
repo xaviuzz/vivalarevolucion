@@ -14,10 +14,8 @@ describe('Barrio', () => {
       { id: 2, socialClass: SocialClass.CLASE_MEDIA }
     ]
 
-    const { container } = render(<Barrio citizens={citizens} />)
-
-    const citizenElements = container.querySelectorAll('[data-class]')
-    expect(citizenElements.length).toBe(3)
+    SUT.render(citizens)
+    expect(SUT.getCitizenCount()).toBe(3)
   })
 
   it('renders citizens with correct social classes', () => {
@@ -26,12 +24,22 @@ describe('Barrio', () => {
       { id: 1, socialClass: SocialClass.OBREROS }
     ]
 
-    const { container } = render(<Barrio citizens={citizens} />)
-
-    const eliteElements = container.querySelectorAll('[data-class="ELITES"]')
-    const obreroElements = container.querySelectorAll('[data-class="OBREROS"]')
-
-    expect(eliteElements.length).toBe(1)
-    expect(obreroElements.length).toBe(1)
+    SUT.render(citizens)
+    expect(SUT.getCitizenCountByClass(SocialClass.ELITES)).toBe(1)
+    expect(SUT.getCitizenCountByClass(SocialClass.OBREROS)).toBe(1)
   })
 })
+
+class SUT {
+  static render(citizens: CitizenType[]) {
+    render(<Barrio citizens={citizens} />)
+  }
+
+  static getCitizenCount(): number {
+    return document.querySelectorAll('[data-class]').length
+  }
+
+  static getCitizenCountByClass(socialClass: SocialClass): number {
+    return document.querySelectorAll(`[data-class="${socialClass}"]`).length
+  }
+}

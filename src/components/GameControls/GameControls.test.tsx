@@ -5,28 +5,42 @@ import { GameControls } from './GameControls'
 
 describe('GameControls', () => {
   it('displays the current turn number', () => {
-    const mockOnEndTurn = vi.fn()
-    render(<GameControls currentTurn={5} onEndTurn={mockOnEndTurn} />)
+    SUT.render(5)
 
-    expect(screen.getByText('Turno 5')).toBeInTheDocument()
+    expect(SUT.getTurnDisplay(5)).toBeInTheDocument()
   })
 
   it('calls onEndTurn when button is clicked', async () => {
-    const user = userEvent.setup()
-    const mockOnEndTurn = vi.fn()
-    render(<GameControls currentTurn={1} onEndTurn={mockOnEndTurn} />)
+    SUT.render(1)
 
-    const button = screen.getByRole('button', { name: /acabar turno/i })
-    await user.click(button)
+    const button = SUT.getEndTurnButton()
+    await SUT.user.click(button)
 
-    expect(mockOnEndTurn).toHaveBeenCalledTimes(1)
+    expect(SUT.mockOnEndTurn).toHaveBeenCalledTimes(1)
   })
 
   it('renders button with correct text', () => {
-    const mockOnEndTurn = vi.fn()
-    render(<GameControls currentTurn={1} onEndTurn={mockOnEndTurn} />)
+    SUT.render(1)
 
-    const button = screen.getByRole('button', { name: /acabar turno/i })
+    const button = SUT.getEndTurnButton()
     expect(button).toBeInTheDocument()
   })
 })
+
+class SUT {
+  static mockOnEndTurn = vi.fn()
+  static user = userEvent.setup()
+
+  static render(currentTurn: number) {
+    SUT.mockOnEndTurn.mockClear()
+    render(<GameControls currentTurn={currentTurn} onEndTurn={SUT.mockOnEndTurn} />)
+  }
+
+  static getTurnDisplay(turn: number): HTMLElement {
+    return screen.getByText(`Turno ${turn}`)
+  }
+
+  static getEndTurnButton(): HTMLElement {
+    return screen.getByRole('button', { name: /acabar turno/i })
+  }
+}

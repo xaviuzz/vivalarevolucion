@@ -321,6 +321,251 @@ it('generates exactly 25% of each class', () => {
 })
 ```
 
+### Patrón SUT (Subject Under Test)
+
+Extrae todos los detalles de implementación de los tests a una clase `SUT` que encapsula las interacciones con el sistema bajo prueba. Los tests deben leer como especificaciones de comportamiento.
+
+**Reglas:**
+- Definir `class SUT` **después de todos los tests** (al final del archivo)
+- Usar métodos estáticos con nombres semánticos de alto nivel
+- Encapsular setup, mocks, queries DOM y transformaciones de datos
+- Tests solo deben contener lógica de comportamiento y aserciones
+
+#### ❌ Incorrecto
+
+```typescript
+it('includes all social classes in the barrio', () => {
+  const { container } = render(<HomePage />)
+
+  const desposeidos = container.querySelectorAll('[data-class="DESPOSEIDOS"]')
+  const obreros = container.querySelectorAll('[data-class="OBREROS"]')
+  const claseMedia = container.querySelectorAll('[data-class="CLASE_MEDIA"]')
+  const elites = container.querySelectorAll('[data-class="ELITES"]')
+
+  expect(desposeidos.length).toBeGreaterThan(0)
+  expect(obreros.length).toBeGreaterThan(0)
+  expect(claseMedia.length).toBeGreaterThan(0)
+  expect(elites.length).toBeGreaterThan(0)
+})
+```
+
+**Problemas:**
+- Detalles de implementación (querySelectorAll, selectores)
+- Test verboso y difícil de leer
+- Acoplamiento a estructura DOM
+
+#### ✅ Correcto
+
+```typescript
+it('includes all social classes in the barrio', () => {
+  SUT.render()
+  expect(SUT.hasAllSocialClasses()).toBe(true)
+})
+
+class SUT {
+  static render() {
+    render(<HomePage />)
+  }
+
+  static hasAllSocialClasses(): boolean {
+    const classes = ['DESPOSEIDOS', 'OBREROS', 'CLASE_MEDIA', 'ELITES']
+    return classes.every(socialClass => {
+      const elements = document.querySelectorAll(`[data-class="${socialClass}"]`)
+      return elements.length > 0
+    })
+  }
+}
+```
+
+**Beneficios:**
+- Test lee como especificación de comportamiento
+- Detalles de implementación encapsulados en SUT
+- Cambios en DOM solo requieren actualizar SUT
+- Método reutilizable y testeable
+
+### Mocks y Setup en el SUT
+
+Los mocks y helpers de setup deben ser miembros estáticos del SUT, no variables locales en los tests.
+
+**Reglas:**
+- Declarar mocks como `static mockName = vi.fn()`
+- Declarar setup helpers como `static user = userEvent.setup()`
+- Limpiar mocks automáticamente en el método `render()` del SUT
+- Tests no deben crear variables de setup
+
+#### ❌ Incorrecto
+
+```typescript
+it('calls onEndTurn when button is clicked', async () => {
+  const user = userEvent.setup()
+  const mockOnEndTurn = vi.fn()
+  render(<GameControls currentTurn={1} onEndTurn={mockOnEndTurn} />)
+
+  const button = screen.getByRole('button', { name: /acabar turno/i })
+  await user.click(button)
+
+  expect(mockOnEndTurn).toHaveBeenCalledTimes(1)
+})
+```
+
+**Problemas:**
+- Variables de setup repetidas en cada test
+- Mocks no reutilizables
+- No hay limpieza automática de mocks
+
+#### ✅ Correcto
+
+```typescript
+it('calls onEndTurn when button is clicked', async () => {
+  SUT.render(1)
+
+  const button = SUT.getEndTurnButton()
+  await SUT.user.click(button)
+
+  expect(SUT.mockOnEndTurn).toHaveBeenCalledTimes(1)
+})
+
+class SUT {
+  static mockOnEndTurn = vi.fn()
+  static user = userEvent.setup()
+
+  static render(currentTurn: number) {
+    SUT.mockOnEndTurn.mockClear()
+    render(<GameControls currentTurn={currentTurn} onEndTurn={SUT.mockOnEndTurn} />)
+  }
+
+  static getEndTurnButton(): HTMLElement {
+    return screen.getByRole('button', { name: /acabar turno/i })
+  }
+}
+```
+
+**Beneficios:**
+- Mocks y setup centralizados en SUT
+- Limpieza automática con `mockClear()`
+- Tests más limpios sin variables locales
+- Setup reutilizable entre tests
+
+### Queries de Testing Library
+
+Preferir `screen` queries sobre `container` queries. Usar `document.querySelector` solo cuando sea necesario. Encapsular todos los selectores en el SUT.
+
+**Reglas:**
+- Usar `screen.getByRole()`, `screen.getByText()` cuando sea posible
+- Usar `document.querySelector()` para selectores custom (ej: `[data-class]`)
+- No devolver `container` desde métodos del SUT
+- Métodos del SUT deben devolver valores semánticos (HTMLElement, number, boolean)
+
+#### ❌ Incorrecto
+
+```typescript
+it('renders all citizens', () => {
+  const { container } = render(<Barrio citizens={citizens} />)
+
+  const citizenElements = container.querySelectorAll('[data-class]')
+  expect(citizenElements.length).toBe(3)
+})
+```
+
+**Problemas:**
+- Usa `container` en el test
+- querySelector en el test
+- Devuelve NodeList en vez de valor semántico
+
+#### ✅ Correcto
+
+```typescript
+it('renders all citizens', () => {
+  SUT.render(citizens)
+  expect(SUT.getCitizenCount()).toBe(3)
+})
+
+class SUT {
+  static render(citizens: CitizenType[]) {
+    render(<Barrio citizens={citizens} />)
+  }
+
+  static getCitizenCount(): number {
+    return document.querySelectorAll('[data-class]').length
+  }
+}
+```
+
+**Beneficios:**
+- Test no ve `container` ni selectores
+- Método devuelve número semántico
+- Selector encapsulado en SUT
+- Fácil de cambiar implementación
+
+### Métodos SUT Semánticos de Alto Nivel
+
+Los métodos del SUT deben expresar intención de negocio, no detalles técnicos. Deben devolver valores significativos del dominio.
+
+**Reglas:**
+- Nombres que expresen **qué** se verifica, no **cómo**
+- Devolver tipos primitivos semánticos (boolean, number, string) no estructuras de datos complejas
+- Reutilizar métodos del SUT dentro de otros métodos del SUT
+- Métodos deben ser Pure Functions cuando sea posible
+
+#### ❌ Incorrecto
+
+```typescript
+class SUT {
+  static getCitizenElements(container: HTMLElement): NodeList {
+    return container.querySelectorAll('[data-class]')
+  }
+}
+
+it('renders citizens', () => {
+  const { container } = SUT.render()
+  const elements = SUT.getCitizenElements(container)
+  expect(elements.length).toBeGreaterThan(0)
+})
+```
+
+**Problemas:**
+- Método devuelve NodeList (bajo nivel)
+- Test hace lógica de negocio (comparar length)
+- Nombre técnico, no semántico
+
+#### ✅ Correcto
+
+```typescript
+class SUT {
+  static render() {
+    render(<HomePage />)
+  }
+
+  static getCitizenCount(): number {
+    return document.querySelectorAll('[data-class]').length
+  }
+
+  static hasAllSocialClasses(): boolean {
+    const classes = ['DESPOSEIDOS', 'OBREROS', 'CLASE_MEDIA', 'ELITES']
+    return classes.every(socialClass => {
+      const elements = document.querySelectorAll(`[data-class="${socialClass}"]`)
+      return elements.length > 0
+    })
+  }
+}
+
+it('renders citizens', () => {
+  SUT.render()
+  expect(SUT.getCitizenCount()).toBeGreaterThan(0)
+})
+
+it('includes all social classes', () => {
+  SUT.render()
+  expect(SUT.hasAllSocialClasses()).toBe(true)
+})
+```
+
+**Beneficios:**
+- Métodos devuelven valores de dominio (number, boolean)
+- Nombres semánticos de negocio
+- Tests leen como especificaciones
+- Lógica encapsulada, reutilizable
+
 ## Arquitectura de Proyecto
 
 ### Organización de carpetas por responsabilidad

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { Citizen } from './Citizen'
 import { SocialClass, Citizen as CitizenType } from '../../types/Citizen'
 
@@ -10,8 +10,8 @@ describe('Citizen', () => {
       socialClass: SocialClass.OBREROS
     }
 
-    const { container } = render(<Citizen citizen={citizen} />)
-    expect(container.firstChild).toBeInTheDocument()
+    SUT.render(citizen)
+    expect(SUT.getCitizenElement()).toBeInTheDocument()
   })
 
   it('includes the social class in data attribute for styling', () => {
@@ -20,8 +20,22 @@ describe('Citizen', () => {
       socialClass: SocialClass.DESPOSEIDOS
     }
 
-    const { container } = render(<Citizen citizen={citizen} />)
-    const element = container.firstChild as HTMLElement
-    expect(element.dataset.class).toBe(SocialClass.DESPOSEIDOS)
+    SUT.render(citizen)
+    expect(SUT.getSocialClass()).toBe(SocialClass.DESPOSEIDOS)
   })
 })
+
+class SUT {
+  static render(citizen: CitizenType) {
+    render(<Citizen citizen={citizen} />)
+  }
+
+  static getCitizenElement(): HTMLElement {
+    return document.querySelector('[data-class]') as HTMLElement
+  }
+
+  static getSocialClass(): string | undefined {
+    const element = SUT.getCitizenElement()
+    return element?.dataset.class
+  }
+}

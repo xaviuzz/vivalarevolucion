@@ -5,59 +5,76 @@ import { HomePage } from './HomePage'
 
 describe('HomePage', () => {
   it('renders the title correctly', () => {
-    render(<HomePage />)
-    const title = screen.getByRole('heading', { level: 1 })
+    SUT.render()
+    const title = SUT.getTitle()
     expect(title).toBeInTheDocument()
     expect(title).toHaveTextContent('VIVA LA REVOLUCION!!')
   })
 
   it('renders the Barrio component', () => {
-    const { container } = render(<HomePage />)
-
-    // Check that citizen cells are rendered
-    const citizenElements = container.querySelectorAll('[data-class]')
-    expect(citizenElements.length).toBeGreaterThan(0)
+    SUT.render()
+    expect(SUT.getCitizenCount()).toBeGreaterThan(0)
   })
 
   it('generates citizens within expected range', () => {
-    const { container } = render(<HomePage />)
-
-    const citizenElements = container.querySelectorAll('[data-class]')
-    expect(citizenElements.length).toBeGreaterThanOrEqual(100)
-    expect(citizenElements.length).toBeLessThanOrEqual(500)
+    SUT.render()
+    const count = SUT.getCitizenCount()
+    expect(count).toBeGreaterThanOrEqual(100)
+    expect(count).toBeLessThanOrEqual(500)
   })
 
   it('includes all social classes in the barrio', () => {
-    const { container } = render(<HomePage />)
-
-    const desposeidos = container.querySelectorAll('[data-class="DESPOSEIDOS"]')
-    const obreros = container.querySelectorAll('[data-class="OBREROS"]')
-    const claseMedia = container.querySelectorAll('[data-class="CLASE_MEDIA"]')
-    const elites = container.querySelectorAll('[data-class="ELITES"]')
-
-    // All classes should appear at least once (statistically certain)
-    expect(desposeidos.length).toBeGreaterThan(0)
-    expect(obreros.length).toBeGreaterThan(0)
-    expect(claseMedia.length).toBeGreaterThan(0)
-    expect(elites.length).toBeGreaterThan(0)
+    SUT.render()
+    expect(SUT.hasAllSocialClasses()).toBe(true)
   })
 
   it('displays turn counter starting at turn 1', () => {
-    render(<HomePage />)
-    expect(screen.getByText('Turno 1')).toBeInTheDocument()
+    SUT.render()
+    expect(SUT.getTurnDisplay()).toBeInTheDocument()
   })
 
   it('advances turn when end turn button is clicked', async () => {
-    const user = userEvent.setup()
-    render(<HomePage />)
+    SUT.render()
 
-    const button = screen.getByRole('button', { name: /acabar turno/i })
-    expect(screen.getByText('Turno 1')).toBeInTheDocument()
+    const button = SUT.getEndTurnButton()
+    expect(SUT.getTurnDisplay()).toBeInTheDocument()
 
-    await user.click(button)
+    await SUT.user.click(button)
     expect(screen.getByText('Turno 2')).toBeInTheDocument()
 
-    await user.click(button)
+    await SUT.user.click(button)
     expect(screen.getByText('Turno 3')).toBeInTheDocument()
   })
 })
+
+class SUT {
+  static user = userEvent.setup()
+
+  static render() {
+    render(<HomePage />)
+  }
+
+  static getTitle(): HTMLElement {
+    return screen.getByRole('heading', { level: 1 })
+  }
+
+  static getCitizenCount(): number {
+    return document.querySelectorAll('[data-class]').length
+  }
+
+  static hasAllSocialClasses(): boolean {
+    const classes = ['DESPOSEIDOS', 'OBREROS', 'CLASE_MEDIA', 'ELITES']
+    return classes.every(socialClass => {
+      const elements = document.querySelectorAll(`[data-class="${socialClass}"]`)
+      return elements.length > 0
+    })
+  }
+
+  static getTurnDisplay(): HTMLElement {
+    return screen.getByText('Turno 1')
+  }
+
+  static getEndTurnButton(): HTMLElement {
+    return screen.getByRole('button', { name: /acabar turno/i })
+  }
+}

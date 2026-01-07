@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { generateCitizens } from './citizenGenerator'
-import { SocialClass } from '../../types/Citizen'
+import { SocialClass, Citizen } from '../../types/Citizen'
 
 describe('generateCitizens', () => {
   it('generates between 100 and 500 citizens', () => {
@@ -27,21 +27,10 @@ describe('generateCitizens', () => {
 
   it('distributes classes with random percentages that sum to 100%', () => {
     const citizens = generateCitizens()
+    const counts = SUT.countByClass(citizens)
 
-    const counts: Record<SocialClass, number> = {
-      [SocialClass.DESPOSEIDOS]: 0,
-      [SocialClass.OBREROS]: 0,
-      [SocialClass.CLASE_MEDIA]: 0,
-      [SocialClass.ELITES]: 0
-    }
-
-    citizens.forEach((c) => counts[c.socialClass]++)
-
-    const total = Object.values(counts).reduce((sum, n) => sum + n, 0)
-    expect(total).toBe(citizens.length)
-
-    const classesWithCitizens = Object.values(counts).filter(n => n > 0).length
-    expect(classesWithCitizens).toBeGreaterThanOrEqual(3)
+    expect(SUT.getTotalCount(counts)).toBe(citizens.length)
+    expect(SUT.countPopulatedClasses(counts)).toBeGreaterThanOrEqual(3)
   })
 
   it('generates different distributions across multiple runs', () => {
@@ -49,22 +38,39 @@ describe('generateCitizens', () => {
 
     for (let i = 0; i < 5; i++) {
       const citizens = generateCitizens()
-      const counts: Record<SocialClass, number> = {
-        [SocialClass.DESPOSEIDOS]: 0,
-        [SocialClass.OBREROS]: 0,
-        [SocialClass.CLASE_MEDIA]: 0,
-        [SocialClass.ELITES]: 0
-      }
-
-      citizens.forEach((c) => counts[c.socialClass]++)
-
-      const percentages = Object.values(counts).map(n =>
-        Math.floor((n / citizens.length) * 100)
-      )
-      distributions.push(percentages.join('-'))
+      distributions.push(SUT.getDistributionSignature(citizens))
     }
 
     const uniqueDistributions = new Set(distributions)
     expect(uniqueDistributions.size).toBeGreaterThanOrEqual(3)
   })
 })
+
+class SUT {
+  static countByClass(citizens: Citizen[]): Record<SocialClass, number> {
+    const counts: Record<SocialClass, number> = {
+      [SocialClass.DESPOSEIDOS]: 0,
+      [SocialClass.OBREROS]: 0,
+      [SocialClass.CLASE_MEDIA]: 0,
+      [SocialClass.ELITES]: 0
+    }
+    citizens.forEach((c) => counts[c.socialClass]++)
+    return counts
+  }
+
+  static getTotalCount(counts: Record<SocialClass, number>): number {
+    return Object.values(counts).reduce((sum, n) => sum + n, 0)
+  }
+
+  static countPopulatedClasses(counts: Record<SocialClass, number>): number {
+    return Object.values(counts).filter(n => n > 0).length
+  }
+
+  static getDistributionSignature(citizens: Citizen[]): string {
+    const counts = SUT.countByClass(citizens)
+    const percentages = Object.values(counts).map(n =>
+      Math.floor((n / citizens.length) * 100)
+    )
+    return percentages.join('-')
+  }
+}
