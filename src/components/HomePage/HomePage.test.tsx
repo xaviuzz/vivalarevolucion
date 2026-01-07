@@ -28,6 +28,11 @@ describe('HomePage', () => {
     expect(SUT.hasAllSocialClasses()).toBe(true)
   })
 
+  it('renders the Statistics component', () => {
+    SUT.render()
+    expect(SUT.hasStatisticsPanel()).toBe(true)
+  })
+
   it('displays turn counter starting at turn 1', () => {
     SUT.render()
     expect(SUT.getTurnDisplay()).toBeInTheDocument()
@@ -76,5 +81,10 @@ class SUT {
 
   static getEndTurnButton(): HTMLElement {
     return screen.getByRole('button', { name: /acabar turno/i })
+  }
+
+  static hasStatisticsPanel(): boolean {
+    const allItems = document.querySelectorAll('li[title]')
+    return allItems.length > 0
   }
 }
