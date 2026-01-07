@@ -1,0 +1,22 @@
+.citizen {
+  width: var(--citizen-cell-size);
+  height: var(--citizen-cell-size);
+  border-radius: 2px;
+}
+
+/* Color mapping con attribute selectors */
+.citizen[data-class='DESPOSEIDOS'] {
+  background-color: var(--class-desposeidos);
+}
+
+.citizen[data-class='OBREROS'] {
+  background-color: var(--class-obreros);
+}
+
+.citizen[data-class='CLASE_MEDIA'] {
+  background-color: var(--class-clase-media);
+}
+
+.citizen[data-class='ELITES'] {
+  background-color: var(--class-elites);
+}

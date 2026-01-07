@@ -1,0 +1,28 @@
+:root {
+  /* Flexoki Light - Base colors */
+  --flexoki-bg: #FFFCF0;
+  --flexoki-base-100: #F2F0E5;
+  --flexoki-base-200: #E6E4D9;
+  --flexoki-base-300: #DAD8CE;
+  --flexoki-tx: #100F0F;
+  --flexoki-tx-secondary: #6F6E69;
+
+  /* Flexoki Light - Red accent */
+  --flexoki-red: #AF3029;
+  --flexoki-red-light: #D14D41;
+  --flexoki-red-dark: #8C241C;
+
+  /* Typography */
+  --font-title: 'Bebas Neue', sans-serif;
+  --font-body: system-ui, -apple-system, sans-serif;
+
+  /* Social Class Colors - Distinct & Vibrant */
+  --class-desposeidos: #AF3029;   /* Flexoki Red - lucha, pobreza */
+  --class-obreros: #205EA6;        /* Flexoki Blue - trabajo, solidaridad */
+  --class-clase-media: #24837B;    /* Flexoki Cyan - equilibrio, estabilidad */
+  --class-elites: #D0A215;         /* Yellow - riqueza, lujo */
+
+  /* Grid dimensions */
+  --citizen-cell-size: 20px;
+  --citizen-gap: 2px;
+}

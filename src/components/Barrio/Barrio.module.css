@@ -1,0 +1,8 @@
+.grid {
+  display: grid;
+  gap: var(--citizen-gap);
+  width: fit-content;
+  max-width: 95vw;
+  max-height: 90vh;
+  padding: 1rem;
+}
