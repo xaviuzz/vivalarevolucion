@@ -219,6 +219,7 @@ Evita crear tests que verifiquen:
 - El tipo de elemento HTML (DIV, SPAN, etc.)
 - La estructura interna del DOM
 - Comportamientos ya cubiertos en tests de componentes hijos
+- **Estructuras de datos internas**: No testear el formato o estructura de objetos de configuración intermedios (ej: tablas de probabilidades). En su lugar, testear el comportamiento observable que resulta de usar esas estructuras
 
 ### Ejemplos
 
@@ -272,6 +273,49 @@ it('renders the HomePage component', () => {
   expect(title).toHaveTextContent('VIVA LA REVOLUCION!!')
 })
 ```
+
+#### ❌ Tests de estructuras internas (NO hacer esto)
+
+```typescript
+// Test de estructura de datos - NO ÚTIL
+it('has correct probability values in transition table', () => {
+  const table = getTransitionProbabilities(SocialClass.CLASE_MEDIA)
+
+  expect(table[SocialClass.ELITES]).toBe(0.01)
+  expect(table[SocialClass.CLASE_MEDIA]).toBe(0.49)
+  expect(table[SocialClass.OBREROS]).toBe(0.40)
+  expect(table[SocialClass.DESPOSEIDOS]).toBe(0.10)
+})
+```
+
+**Problemas:**
+- Testea estructura interna, no comportamiento
+- Frágil: cualquier cambio en la tabla rompe el test
+- No verifica que el comportamiento sea correcto
+- Andamia la implementación
+
+#### ✅ Testear comportamiento observable (SÍ hacer esto)
+
+```typescript
+// Test de comportamiento estadístico - ÚTIL
+it('CLASE_MEDIA evoluciona a OBREROS ~40% del tiempo', () => {
+  const ITERATIONS = 10000
+
+  const actualRate = EvolveCitizenSUT.calculateTransitionRate(
+    SocialClass.CLASE_MEDIA,
+    SocialClass.OBREROS,
+    ITERATIONS
+  )
+
+  expect(actualRate).toBeCloseTo(0.40, 1)
+})
+```
+
+**Beneficios:**
+- Verifica comportamiento real del sistema
+- Robusto: permite cambiar implementación interna
+- Testea lo que importa: las probabilidades observadas
+- No andamia la estructura de datos
 
 ### Tests de comportamiento aleatorio
 
@@ -330,6 +374,18 @@ Extrae todos los detalles de implementación de los tests a una clase `SUT` que 
 - Usar métodos estáticos con nombres semánticos de alto nivel
 - Encapsular setup, mocks, queries DOM y transformaciones de datos
 - Tests solo deben contener lógica de comportamiento y aserciones
+
+**Múltiples SUTs para múltiples sujetos:**
+- Cuando un archivo testea múltiples funciones distintas, crear una clase SUT por cada sujeto bajo prueba
+- Cada SUT encapsula solo los detalles de implementación de su sujeto específico
+- Permite mejor organización cuando hay diferentes dominios de comportamiento
+- Ejemplo: `EvolveCitizenSUT` para `evolveCitizen()` y `EvolveCitizensSUT` para `evolveCitizens()`
+
+**Helpers compartidos fuera de SUTs:**
+- Cuando múltiples SUTs necesitan la misma funcionalidad básica (ej: crear objetos de prueba), extraer a una función helper compartida
+- Los helpers deben definirse **antes** de las clases SUT, al final del archivo pero antes de los SUTs
+- Esto evita duplicación de código entre SUTs
+- Ejemplo: `function createCitizen(id: number, socialClass: SocialClass): Citizen` usado por múltiples SUTs
 
 #### ❌ Incorrecto
 
@@ -446,6 +502,53 @@ class SUT {
 - Tests más limpios sin variables locales
 - Setup reutilizable entre tests
 
+### Testing de React Hooks con renderHook
+
+Para testear custom hooks de React, usar `renderHook` de React Testing Library y encapsular el patrón en el SUT.
+
+**Reglas:**
+- `SUT.render()` debe devolver el objeto `RenderHookResult` directamente
+- Métodos del SUT reciben el hook result como parámetro
+- Usar `act()` para envolver operaciones que actualizan estado
+- Métodos del SUT extraen valores de `hook.result.current`
+
+#### Ejemplo correcto
+
+```typescript
+import { renderHook, act, RenderHookResult } from '@testing-library/react'
+import { useGameEngine, GameEngineHook } from './useGameEngine'
+
+it('incrementa turno al llamar endTurn', () => {
+  const hook = SUT.render()
+
+  SUT.endTurn(hook)
+
+  expect(SUT.getTurn(hook)).toBe(2)
+})
+
+class SUT {
+  static render() {
+    return renderHook(() => useGameEngine())
+  }
+
+  static getTurn(hook: RenderHookResult<GameEngineHook, unknown>): number {
+    return hook.result.current.currentTurn
+  }
+
+  static endTurn(hook: RenderHookResult<GameEngineHook, unknown>): void {
+    act(() => {
+      hook.result.current.endTurn()
+    })
+  }
+}
+```
+
+**Beneficios:**
+- Hook result pasa explícitamente entre métodos
+- Métodos del SUT tienen firma clara con tipos
+- Fácil testear múltiples instancias del hook en paralelo
+- Pattern consistente: render devuelve objeto, métodos lo reciben
+
 ### Queries de Testing Library
 
 Preferir `screen` queries sobre `container` queries. Usar `document.querySelector` solo cuando sea necesario. Encapsular todos los selectores en el SUT.
@@ -507,6 +610,13 @@ Los métodos del SUT deben expresar intención de negocio, no detalles técnicos
 - Reutilizar métodos del SUT dentro de otros métodos del SUT
 - Métodos deben ser Pure Functions cuando sea posible
 
+**Métodos de alto nivel para loops estadísticos:**
+- Cuando los tests necesitan ejecutar loops complejos (ej: verificar tasas de probabilidad), encapsular el loop completo en un método del SUT
+- El método debe devolver el resultado final (ej: tasa calculada, boolean de verificación)
+- El test solo debe llamar al método y verificar el resultado esperado
+- Esto oculta complejidad algorítmica y hace que el test exprese solo la intención
+- Ejemplo: `calculateTransitionRate(fromClass, toClass, iterations)` en vez de exponer el loop en el test
+
 #### ❌ Incorrecto
 
 ```typescript
@@ -566,6 +676,68 @@ it('includes all social classes', () => {
 - Tests leen como especificaciones
 - Lógica encapsulada, reutilizable
 
+#### Ejemplo de método estadístico de alto nivel
+
+❌ **Incorrecto** - Loop expuesto en el test:
+
+```typescript
+it('CLASE_MEDIA evoluciona a OBREROS ~40% del tiempo', () => {
+  const ITERATIONS = 10000
+  let transitions = 0
+
+  for (let i = 0; i < ITERATIONS; i++) {
+    const citizen: Citizen = { id: i, socialClass: SocialClass.CLASE_MEDIA }
+    const evolved = evolveCitizen(citizen)
+    if (evolved.socialClass === SocialClass.OBREROS) {
+      transitions++
+    }
+  }
+
+  const actualRate = transitions / ITERATIONS
+  expect(actualRate).toBeCloseTo(0.40, 1)
+})
+```
+
+✅ **Correcto** - Loop encapsulado en método SUT:
+
+```typescript
+it('CLASE_MEDIA evoluciona a OBREROS ~40% del tiempo', () => {
+  const ITERATIONS = 10000
+
+  const actualRate = EvolveCitizenSUT.calculateTransitionRate(
+    SocialClass.CLASE_MEDIA,
+    SocialClass.OBREROS,
+    ITERATIONS
+  )
+
+  expect(actualRate).toBeCloseTo(0.40, 1)
+})
+
+class EvolveCitizenSUT {
+  static calculateTransitionRate(
+    fromClass: SocialClass,
+    toClass: SocialClass,
+    iterations: number
+  ): number {
+    let transitions = 0
+    for (let i = 0; i < iterations; i++) {
+      const citizen = createCitizen(i, fromClass)
+      const evolved = evolveCitizen(citizen)
+      if (evolved.socialClass === toClass) {
+        transitions++
+      }
+    }
+    return transitions / iterations
+  }
+}
+```
+
+**Beneficios:**
+- Test expresa intención: "calcular tasa de transición entre clases"
+- Complejidad del loop oculta en SUT
+- Test más legible y mantenible
+- Método reutilizable para otros tests de transición
+
 ## Arquitectura de Proyecto
 
 ### Organización de carpetas por responsabilidad
@@ -578,16 +750,20 @@ El código debe organizarse por responsabilidad funcional, no por tipo de archiv
 /src
 ├── types/              # Solo definiciones de tipos TypeScript
 │   ├── Citizen.ts
-│   ├── Barrio.ts
 │   └── index.ts
 │
-├── game/              # Lógica de negocio del juego
+├── game/               # SOLO lógica pura (sin React)
+│   ├── GameEngine.ts   # Clases de negocio
 │   ├── population/
-│   │   └── citizenGenerator.ts
-│   └── turns/
-│       └── useTurnManager.ts
+│   │   └── citizenGenerator.ts  # Funciones puras
+│   └── evolution/
+│       ├── evolutionEngine.ts   # Funciones puras
+│       └── evolutionProbabilities.ts  # Constantes
 │
-└── components/        # Solo UI y presentación
+├── hooks/              # Integración React con lógica de negocio
+│   └── useGameEngine.ts
+│
+└── components/         # Solo UI y presentación
     └── Barrio/
         ├── Barrio.tsx
         └── useBarrioLayout.ts  # Hooks de presentación junto al componente
@@ -595,8 +771,9 @@ El código debe organizarse por responsabilidad funcional, no por tipo de archiv
 
 **Principios:**
 - `/types` - Solo interfaces, types y enums. Sin lógica.
-- `/game` - Lógica de negocio, reglas del juego, cálculos. Sin componentes React.
-- `/components` - UI, presentación, hooks de presentación. Sin lógica de negocio.
+- `/game` - **SOLO lógica pura**: clases, funciones puras, constantes. **Sin hooks de React**.
+- `/hooks` - Hooks que integran lógica de negocio (`/game`) con React.
+- `/components` - UI, presentación, hooks de presentación (layout, estilos). Sin lógica de negocio.
 
 #### ❌ Incorrecto
 
@@ -604,21 +781,34 @@ El código debe organizarse por responsabilidad funcional, no por tipo de archiv
 /src
 ├── models/           # Nombre confuso (¿son modelos de datos o tipos?)
 ├── utils/            # Demasiado genérico (¿utilidades o lógica del juego?)
+├── game/
+│   └── useGameState.ts  # ❌ Hook de React en /game
 └── components/
-    └── HomePage.tsx  # Mezcla lógica de turnos con UI
+    └── HomePage.tsx     # Mezcla lógica de negocio con UI
 ```
+
+**Problemas:**
+- Hooks de React mezclados con lógica de negocio en `/game`
+- Dificulta reutilización de la lógica fuera de React
+- Acoplamiento innecesario entre framework y lógica de negocio
 
 #### ✅ Correcto
 
 ```
 /src
-├── types/            # Claro: solo tipos
-├── game/             # Claro: lógica del juego
-│   └── turns/
-│       └── useTurnManager.ts
-└── components/
-    └── HomePage.tsx  # Solo UI, usa hooks de /game
+├── types/            # Solo tipos
+├── game/             # Solo lógica pura
+│   └── GameEngine.ts
+├── hooks/            # Integración React
+│   └── useGameEngine.ts
+└── components/       # Solo UI
+    └── HomePage.tsx
 ```
+
+**Beneficios:**
+- Lógica de negocio independiente de React
+- Fácil de testear (sin necesidad de React Testing Library para lógica pura)
+- Reutilizable en otros contextos (Node.js, CLI, otros frameworks)
 
 ### Hooks personalizados
 
@@ -628,43 +818,83 @@ Los hooks personalizados deben encapsular estado y lógica relacionada, retornan
 - Nombre con prefijo `use` (convención React)
 - Encapsular completamente su responsabilidad
 - Retornar interfaz simple y clara
-- Colocar hooks de negocio en `/game`, hooks de presentación en `/components`
+- **Hooks de integración con lógica de negocio**: `/hooks` (ej: `useGameEngine`)
+- **Hooks de presentación/UI**: junto al componente en `/components` (ej: `useBarrioLayout`)
+
+#### Tipos de hooks
+
+**Hooks de integración (`/hooks`):**
+- Integran lógica de negocio (`/game`) con React
+- Mantienen instancias de clases de negocio en estado
+- Ejemplo: `useGameEngine` - integra `GameEngine` con React
+
+**Hooks de presentación (`/components`):**
+- Cálculos de layout, estilos, animaciones
+- Específicos de un componente
+- Ejemplo: `useBarrioLayout` - calcula dimensiones del grid
 
 #### ❌ Incorrecto
 
 ```typescript
-// HomePage.tsx - Lógica de turnos mezclada con UI
+// HomePage.tsx - Lógica de negocio mezclada con UI
 export function HomePage() {
   const [currentTurn, setCurrentTurn] = useState(1)
+  const [citizens, setCitizens] = useState<Citizen[]>([])
 
   const handleEndTurn = () => {
     setCurrentTurn(prev => prev + 1)
+    setCitizens(evolveCitizens(citizens))
   }
 
   return <GameControls currentTurn={currentTurn} onEndTurn={handleEndTurn} />
 }
 ```
 
+**Problemas:**
+- Lógica de negocio no reutilizable
+- Difícil de testear
+- Componente con demasiada responsabilidad
+
 #### ✅ Correcto
 
 ```typescript
-// game/turns/useTurnManager.ts - Hook encapsula lógica de negocio
-export function useTurnManager() {
-  const [currentTurn, setCurrentTurn] = useState(1)
+// game/GameEngine.ts - Lógica pura
+export class GameEngine {
+  endTurn(): GameEngine {
+    const evolvedCitizens = evolveCitizens(this.state.citizens)
+    return new GameEngine({
+      citizens: evolvedCitizens,
+      currentTurn: this.state.currentTurn + 1
+    })
+  }
+}
+
+// hooks/useGameEngine.ts - Integración React
+export function useGameEngine() {
+  const [engine, setEngine] = useState(() => GameEngine.createNew())
 
   const endTurn = useCallback(() => {
-    setCurrentTurn(prev => prev + 1)
+    setEngine(prev => prev.endTurn())
   }, [])
 
-  return { currentTurn, endTurn }
+  return {
+    citizens: engine.getCitizens(),
+    currentTurn: engine.getCurrentTurn(),
+    endTurn
+  }
 }
 
 // HomePage.tsx - Solo usa el hook
 export function HomePage() {
-  const { currentTurn, endTurn } = useTurnManager()
+  const { citizens, currentTurn, endTurn } = useGameEngine()
   return <GameControls currentTurn={currentTurn} onEndTurn={endTurn} />
 }
 ```
+
+**Beneficios:**
+- Lógica de negocio separada y testeable
+- Hook delgado de integración
+- Componente simple y enfocado en UI
 
 ### Componentes autónomos
 
@@ -717,6 +947,164 @@ export function HomePage() {
 - HomePage más simple, sin conocimiento de layout
 - Cambios en cálculo de dimensiones solo afectan a Barrio
 - Mejor separación de responsabilidades
+
+### Clases de lógica de negocio (GameEngine pattern)
+
+Para encapsular la lógica de negocio compleja, usar clases OOP inmutables que sean completamente independientes de React.
+
+#### Características de una clase de negocio
+
+**Inmutabilidad:**
+- Métodos que modifican estado deben devolver **nueva instancia**
+- Estado interno debe ser `readonly` para prevenir mutaciones
+- Métodos getter deben devolver **copias** de arrays/objetos
+
+**Factory Methods:**
+- Constructor `private` para forzar uso de factory methods
+- `static createNew()` para crear nueva instancia
+- `static fromState(state)` para restaurar desde estado guardado
+
+**Sin dependencias de React:**
+- Solo TypeScript/JavaScript puro
+- Sin imports de React
+- Testeable sin React Testing Library
+
+#### ❌ Incorrecto
+
+```typescript
+// Hook con lógica de negocio mezclada
+export function useGameState() {
+  const [citizens, setCitizens] = useState<Citizen[]>([])
+  const [currentTurn, setCurrentTurn] = useState(1)
+
+  const endTurn = useCallback(() => {
+    setCurrentTurn(prev => prev + 1)
+    setCitizens(evolveCitizens(citizens))
+  }, [citizens])
+
+  return { citizens, currentTurn, endTurn }
+}
+```
+
+**Problemas:**
+- Lógica de negocio acoplada a React
+- Imposible usar fuera de componentes React
+- Tests requieren React Testing Library
+- No reutilizable en Node.js, CLI, etc.
+
+#### ✅ Correcto
+
+```typescript
+// game/GameEngine.ts - Lógica pura
+export interface GameEngineState {
+  citizens: Citizen[]
+  currentTurn: number
+}
+
+export class GameEngine {
+  private constructor(private readonly state: GameEngineState) {}
+
+  static createNew(): GameEngine {
+    const citizens = generateCitizens()
+    return new GameEngine({ citizens, currentTurn: 1 })
+  }
+
+  static fromState(state: GameEngineState): GameEngine {
+    return new GameEngine(state)
+  }
+
+  getState(): GameEngineState {
+    return {
+      citizens: [...this.state.citizens],
+      currentTurn: this.state.currentTurn
+    }
+  }
+
+  getCitizens(): Citizen[] {
+    return [...this.state.citizens]
+  }
+
+  getCurrentTurn(): number {
+    return this.state.currentTurn
+  }
+
+  endTurn(): GameEngine {
+    const evolvedCitizens = evolveCitizens(this.state.citizens)
+    return new GameEngine({
+      citizens: evolvedCitizens,
+      currentTurn: this.state.currentTurn + 1
+    })
+  }
+}
+
+// hooks/useGameEngine.ts - Integración React delgada
+export function useGameEngine() {
+  const [engine, setEngine] = useState<GameEngine>(() =>
+    GameEngine.createNew()
+  )
+
+  const endTurn = useCallback(() => {
+    setEngine(prevEngine => prevEngine.endTurn())
+  }, [])
+
+  return {
+    citizens: engine.getCitizens(),
+    currentTurn: engine.getCurrentTurn(),
+    endTurn
+  }
+}
+```
+
+**Beneficios:**
+- GameEngine es 100% independiente de React
+- Tests puros sin necesidad de DOM
+- Reutilizable en cualquier contexto JavaScript
+- Hook es una capa delgada de integración
+- Fácil extensibilidad (save/load, undo/redo, time-travel)
+
+#### Patrón de inmutabilidad en métodos
+
+```typescript
+// ❌ Incorrecto - Muta el estado interno
+endTurn(): void {
+  this.state.citizens = evolveCitizens(this.state.citizens)
+  this.state.currentTurn++
+}
+
+// ✅ Correcto - Devuelve nueva instancia
+endTurn(): GameEngine {
+  const evolvedCitizens = evolveCitizens(this.state.citizens)
+  const newState = {
+    citizens: evolvedCitizens,
+    currentTurn: this.state.currentTurn + 1
+  }
+  return new GameEngine(newState)
+}
+```
+
+#### Tests de clases de negocio
+
+```typescript
+// Tests puros, sin React
+describe('GameEngine', () => {
+  it('devuelve nueva instancia al llamar endTurn', () => {
+    const engine = GameEngine.createNew()
+    const nextEngine = engine.endTurn()
+
+    expect(nextEngine).not.toBe(engine)
+    expect(nextEngine).toBeInstanceOf(GameEngine)
+  })
+
+  it('preserva estado original tras endTurn', () => {
+    const engine = GameEngine.createNew()
+    const originalTurn = engine.getCurrentTurn()
+
+    engine.endTurn()
+
+    expect(engine.getCurrentTurn()).toBe(originalTurn)
+  })
+})
+```
 
 ## Diseño de UI
 
