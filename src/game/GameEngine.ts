@@ -1,10 +1,14 @@
 import { Citizen, SocialClass, SOCIAL_CLASSES } from '../types/Citizen'
+import { Action } from '../types/Action'
 import { generateCitizens } from './population/citizenGenerator'
 import { evolveCitizens } from './evolution/evolutionEngine'
+import { TRANSITION_PROBABILITIES } from './evolution/evolutionProbabilities'
+import { applyMultipleActions } from './actions/applyModifiers'
 
 export interface GameEngineState {
   citizens: Citizen[]
   currentTurn: number
+  activeActions: Action[]
 }
 
 export class GameEngine {
@@ -14,7 +18,8 @@ export class GameEngine {
     const citizens = generateCitizens()
     return new GameEngine({
       citizens,
-      currentTurn: 1
+      currentTurn: 1,
+      activeActions: []
     })
   }
 
@@ -25,7 +30,8 @@ export class GameEngine {
   getState(): GameEngineState {
     return {
       citizens: [...this.state.citizens],
-      currentTurn: this.state.currentTurn
+      currentTurn: this.state.currentTurn,
+      activeActions: [...this.state.activeActions]
     }
   }
 
@@ -37,13 +43,42 @@ export class GameEngine {
     return this.state.currentTurn
   }
 
+  getActiveActions(): Action[] {
+    return [...this.state.activeActions]
+  }
+
+  activateAction(action: Action): GameEngine {
+    const actionAlreadyActive = this.state.activeActions.some(a => a.id === action.id)
+    if (actionAlreadyActive) {
+      return this
+    }
+
+    return new GameEngine({
+      ...this.state,
+      activeActions: [...this.state.activeActions, action]
+    })
+  }
+
+  deactivateAction(actionId: string): GameEngine {
+    return new GameEngine({
+      ...this.state,
+      activeActions: this.state.activeActions.filter(a => a.id !== actionId)
+    })
+  }
+
   endTurn(): GameEngine {
-    const evolvedCitizens = evolveCitizens(this.state.citizens)
-    const newState: GameEngineState = {
+    const effectiveProbabilities = applyMultipleActions(
+      TRANSITION_PROBABILITIES,
+      this.state.activeActions
+    )
+
+    const evolvedCitizens = evolveCitizens(this.state.citizens, effectiveProbabilities)
+
+    return new GameEngine({
+      ...this.state,
       citizens: evolvedCitizens,
       currentTurn: this.state.currentTurn + 1
-    }
-    return new GameEngine(newState)
+    })
   }
 
   getCitizenCount(): number {

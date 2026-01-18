@@ -1,3 +1,5 @@
+import { WELFARE_STATE_ACTION } from '../../game/actions'
+import { ActionToggle } from './ActionToggle'
 import styles from './GameControls.module.css'
 
 interface GameControlsProps {
@@ -13,6 +15,7 @@ export function GameControls({ currentTurn, onEndTurn }: GameControlsProps) {
         <button className={styles.endTurnButton} onClick={onEndTurn}>
           Acabar turno
         </button>
+        <ActionToggle action={WELFARE_STATE_ACTION} />
       </div>
     </div>
   )

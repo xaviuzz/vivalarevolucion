@@ -2,11 +2,11 @@ import { Barrio } from '../Barrio/Barrio'
 import { Title } from '../Title/Title'
 import { GameControls } from '../GameControls/GameControls'
 import { Statistics } from '../Statistics/Statistics'
-import { useGameEngine } from '../../hooks/useGameEngine'
+import { GameEngineProvider, useGameEngineContext } from '../../contexts/GameEngineContext'
 import styles from './HomePage.module.css'
 
-export function HomePage() {
-  const { citizens, currentTurn, endTurn } = useGameEngine()
+function HomePageContent() {
+  const { citizens, currentTurn, endTurn } = useGameEngineContext()
 
   return (
     <>
@@ -21,5 +21,13 @@ export function HomePage() {
         </div>
       </div>
     </>
+  )
+}
+
+export function HomePage() {
+  return (
+    <GameEngineProvider>
+      <HomePageContent />
+    </GameEngineProvider>
   )
 }

@@ -88,10 +88,19 @@ Los hooks personalizados deben encapsular estado y lógica relacionada, retornan
 - Mantienen instancias de clases de negocio en estado
 - Ejemplo: `useGameEngine` - integra `GameEngine` con React
 
-**Hooks de presentación (`/components`):**
-- Cálculos de layout, estilos, animaciones
-- Específicos de un componente
+**Hooks locales a componente (`/components/NombreComponente/`):**
+- Hooks que solo usa un componente específico
+- Ubicar en la misma carpeta del componente
+- Incluye: hooks de presentación, hooks de comportamiento específico
 - Ejemplo: `useBarrioLayout` - calcula dimensiones del grid
+- Ejemplo: `useActionToggle` - gestiona toggle de una acción específica
+
+```
+/src/components/GameControls/
+├── GameControls.tsx
+├── ActionToggle.tsx
+└── useActionToggle.ts    # Hook local, no en /hooks
+```
 
 ### ❌ Incorrecto
 
@@ -155,6 +164,93 @@ export function HomePage() {
 - Lógica de negocio separada y testeable
 - Hook delgado de integración
 - Componente simple y enfocado en UI
+
+## Componentes con estado propio vía contexto
+
+Cuando un componente necesita acceder a estado global, preferir que obtenga el estado desde un contexto/hook propio en lugar de recibirlo por props. Esto simplifica la interfaz del componente padre y hace el componente más autónomo.
+
+### ❌ Incorrecto
+
+```typescript
+// GameControls recibe muchas props para pasar a sus hijos
+interface GameControlsProps {
+  currentTurn: number
+  onEndTurn: () => void
+  activeActions: Action[]
+  onActivateAction: (action: Action) => void
+  onDeactivateAction: (actionId: string) => void
+}
+
+export function GameControls({
+  currentTurn,
+  onEndTurn,
+  activeActions,
+  onActivateAction,
+  onDeactivateAction
+}: GameControlsProps) {
+  const isWelfareActive = activeActions.some(a => a.id === 'welfare')
+
+  const handleToggle = () => {
+    if (isWelfareActive) onDeactivateAction('welfare')
+    else onActivateAction(WELFARE_ACTION)
+  }
+
+  return (
+    <label>
+      <input checked={isWelfareActive} onChange={handleToggle} />
+    </label>
+  )
+}
+```
+
+### ✅ Correcto
+
+```typescript
+// ActionToggle obtiene estado del contexto via hook local
+function useActionToggle(action: Action) {
+  const { activeActions, activateAction, deactivateAction } = useGameEngineContext()
+  const isActive = activeActions.some(a => a.id === action.id)
+
+  const toggle = () => {
+    if (isActive) deactivateAction(action.id)
+    else activateAction(action)
+  }
+
+  return { isActive, toggle }
+}
+
+export function ActionToggle({ action }: { action: Action }) {
+  const { isActive, toggle } = useActionToggle(action)
+  return (
+    <label>
+      <input checked={isActive} onChange={toggle} />
+      {action.name}
+    </label>
+  )
+}
+
+// GameControls tiene interfaz simplificada
+interface GameControlsProps {
+  currentTurn: number
+  onEndTurn: () => void
+}
+
+export function GameControls({ currentTurn, onEndTurn }: GameControlsProps) {
+  return (
+    <>
+      <p>Turno {currentTurn}</p>
+      <button onClick={onEndTurn}>Acabar turno</button>
+      <ActionToggle action={WELFARE_STATE_ACTION} />
+    </>
+  )
+}
+```
+
+**Beneficios:**
+- Componente padre con interfaz más simple (menos props)
+- Componente hijo autónomo, gestiona su propio estado
+- Evita "prop drilling" (pasar props a través de múltiples niveles)
+- Más fácil de testear (mockear el hook en lugar de muchas props)
 
 ## Componentes autónomos
 

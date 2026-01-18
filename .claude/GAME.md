@@ -167,25 +167,106 @@ interface MatrixDimensions {
 - 250 ciudadanos → 11 filas × 23 columnas (aspect ratio: 2.09)
 - 500 ciudadanos → 15 filas × 34 columnas (aspect ratio: 2.27)
 
-### Reglas de Turno (Actual)
+### Reglas de Turno
 
-**Comportamiento actual:**
+**Comportamiento:**
 
 ```typescript
-handleEndTurn() {
-  currentTurn = currentTurn + 1
+endTurn() {
+  // 1. Aplicar modificadores de acciones activas
+  const effectiveProbabilities = applyMultipleActions(
+    TRANSITION_PROBABILITIES,
+    activeActions
+  )
+  // 2. Evolucionar ciudadanos
+  const evolvedCitizens = evolveCitizens(citizens, effectiveProbabilities)
+  // 3. Incrementar turno
+  currentTurn++
 }
 ```
 
 **Estado del juego:**
 - ✅ Turno avanza al presionar botón
 - ✅ Contador se actualiza visualmente
-- ❌ No hay efectos sobre ciudadanos
+- ✅ Ciudadanos evolucionan según probabilidades de transición
+- ✅ Acciones activas modifican las probabilidades
 - ❌ No hay eventos aleatorios
-- ❌ No hay cambios en clases sociales
 - ❌ No hay condiciones de victoria/derrota
 
-**Nota:** Esta sección se actualizará cuando se implementen mecánicas de turno.
+### Evolución Demográfica
+
+Cada turno, cada ciudadano tiene una probabilidad de cambiar de clase social. Se usa una **matriz de transición de Markov**:
+
+```typescript
+TRANSITION_PROBABILITIES = {
+  ELITES: {
+    ELITES: 0.975,      // 97.5% permanece
+    CLASE_MEDIA: 0.02,  // 2% desciende
+    OBREROS: 0,         // Nunca cae directo
+    DESPOSEIDOS: 0.005  // 0.5% colapso total
+  },
+  CLASE_MEDIA: {
+    ELITES: 0.01,       // 1% asciende
+    CLASE_MEDIA: 0.57,  // 57% permanece
+    OBREROS: 0.40,      // 40% desciende
+    DESPOSEIDOS: 0.02   // 2% colapso
+  },
+  OBREROS: {
+    ELITES: 0.001,      // 0.1% ascenso excepcional
+    CLASE_MEDIA: 0.25,  // 25% asciende
+    OBREROS: 0.649,     // 64.9% permanece
+    DESPOSEIDOS: 0.10   // 10% desciende
+  },
+  DESPOSEIDOS: {
+    ELITES: 0.000001,   // Casi imposible
+    CLASE_MEDIA: 0.000001,
+    OBREROS: 0.000001,
+    DESPOSEIDOS: 0.999997 // "Trampa de pobreza"
+  }
+}
+```
+
+**Características:**
+- Cada fila suma exactamente 1.0
+- Asimetría social realista: élites muy estables, desposeídos atrapados
+- Sin transiciones directas: élites nunca caen directo a obreros
+
+### Sistema de Acciones
+
+Las **acciones** son políticas que modifican las probabilidades de transición. Se activan/desactivan con checkboxes en la UI.
+
+**Estructura de una acción:**
+
+```typescript
+interface Action {
+  id: string
+  name: string
+  description: string
+  modifiers: TransitionModifierTable  // Misma estructura que probabilidades
+}
+```
+
+**Aplicación de modificadores:**
+
+1. Se suman los modificadores a las probabilidades base
+2. Se aplica clamp mínimo (0.000001) para evitar valores negativos
+3. Se normaliza cada fila para que sume 1.0
+
+**Ejemplo - Estado del Bienestar:**
+
+```typescript
+WELFARE_STATE_MODIFIERS = {
+  ELITES: { 0, 0, 0, 0 },           // Sin cambios
+  CLASE_MEDIA: { 0, +0.05, -0.03, -0.02 },  // Más estabilidad
+  OBREROS: { 0, +0.03, +0.02, -0.05 },      // Menos caída
+  DESPOSEIDOS: { +0.00001, +0.02, +0.08, -0.10 }  // Más ascenso
+}
+```
+
+**Efecto:** Mejora movilidad de clases bajas, estabiliza clase media, no afecta élites.
+
+**Acciones implementadas:**
+- `welfare-state`: Estado del Bienestar
 
 ## 5. Mecánicas Futuras (No Implementadas)
 
@@ -252,7 +333,8 @@ Esta sección es un **placeholder** para mecánicas que podrían agregarse:
 **GameControls** (`/src/components/GameControls/GameControls.tsx`):
 - Contador de turno: "Turno N"
 - Botón "Acabar turno" (estilo revolucionario rojo)
-- Props: `currentTurn: number`, `onEndTurn: () => void`
+- Checkbox para activar/desactivar acciones (Estado del Bienestar)
+- Props: `currentTurn`, `onEndTurn`, `activeActions`, `onActivateAction`, `onDeactivateAction`
 
 **Barrio** (`/src/components/Barrio/Barrio.tsx`):
 - Grid CSS dinámico
@@ -282,8 +364,11 @@ Esta sección es un **placeholder** para mecánicas que podrían agregarse:
 - `/src/models/Barrio.ts` - Definición de Barrio y MatrixDimensions
 
 **Utilidades:**
-- `/src/utils/citizenGenerator.ts` - Lógica de generación de población
-- `/src/utils/matrixLayout.ts` - Algoritmo de dimensiones del grid
+- `/src/game/population/citizenGenerator.ts` - Lógica de generación de población
+- `/src/game/evolution/evolutionProbabilities.ts` - Matriz de transición
+- `/src/game/evolution/evolutionEngine.ts` - Motor de evolución demográfica
+- `/src/game/actions/applyModifiers.ts` - Aplicación de modificadores
+- `/src/game/actions/welfareStateAction.ts` - Acción Estado del Bienestar
 
 **Componentes:**
 - `/src/components/HomePage/HomePage.tsx` - Componente principal con estado de turno

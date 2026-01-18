@@ -23,8 +23,11 @@ function selectClassByProbability(transitions: TransitionTable): SocialClass {
   return CLASS_ORDER[CLASS_ORDER.length - 1]
 }
 
-export function evolveCitizen(citizen: Citizen): Citizen {
-  const transitions = TRANSITION_PROBABILITIES[citizen.socialClass]
+export function evolveCitizen(
+  citizen: Citizen,
+  probabilities: Record<SocialClass, TransitionTable> = TRANSITION_PROBABILITIES
+): Citizen {
+  const transitions = probabilities[citizen.socialClass]
   const newClass = selectClassByProbability(transitions)
 
   return {
@@ -33,6 +36,9 @@ export function evolveCitizen(citizen: Citizen): Citizen {
   }
 }
 
-export function evolveCitizens(citizens: Citizen[]): Citizen[] {
-  return citizens.map(evolveCitizen)
+export function evolveCitizens(
+  citizens: Citizen[],
+  probabilities: Record<SocialClass, TransitionTable> = TRANSITION_PROBABILITIES
+): Citizen[] {
+  return citizens.map(citizen => evolveCitizen(citizen, probabilities))
 }
