@@ -32,7 +32,8 @@ describe('GameEngine', () => {
           { id: 10, socialClass: SocialClass.DESPOSEIDOS },
           { id: 20, socialClass: SocialClass.ELITES }
         ],
-        currentTurn: 5
+        currentTurn: 5,
+        activeActions: []
       }
 
       const engine = GameEngine.fromState(state)
