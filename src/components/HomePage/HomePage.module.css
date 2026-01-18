@@ -26,6 +26,7 @@
   flex: 0 0 auto;
   min-width: 250px;
   max-width: 350px;
+  padding-top: 1rem;
 }
 
 @media (max-width: 1024px) {

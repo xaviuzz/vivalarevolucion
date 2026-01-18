@@ -287,3 +287,35 @@ const endTurn = useCallback(() => {
 - Sin side effects inesperados
 - Comportamiento predecible en StrictMode
 - Código más claro y fácil de debuggear
+
+## Alineación vertical entre secciones adyacentes
+
+Cuando dos secciones deben comenzar a la misma altura, verificar que tengan el mismo padding-top o compensar la diferencia. Si un elemento tiene padding interno que desplaza su contenido, las secciones adyacentes necesitan el mismo desplazamiento.
+
+### ❌ Incorrecto
+
+```css
+.barrioSection {
+  /* Barrio tiene padding: 1rem interno */
+}
+
+.statisticsSection {
+  /* Sin padding, comienza más arriba que el contenido del barrio */
+}
+```
+
+### ✅ Correcto
+
+```css
+.barrioSection {
+  /* Barrio tiene padding: 1rem interno */
+}
+
+.statisticsSection {
+  padding-top: 1rem;  /* Compensa el padding del barrio */
+}
+```
+
+**Beneficios:**
+- Alineación visual consistente entre secciones
+- El contenido de ambas secciones comienza a la misma altura

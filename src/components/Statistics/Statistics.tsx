@@ -8,19 +8,18 @@ interface StatisticsProps {
 }
 
 export function Statistics({ citizens }: StatisticsProps) {
-  const { total, byClass } = useStatistics(citizens)
+  const { byClass } = useStatistics(citizens)
 
   return (
     <div className={styles.container}>
-      <div className={styles.total}>{total}</div>
-
       <ul className={styles.classList}>
-        {byClass.map(({ socialClass, count, percentage }) => (
+        {byClass.map(({ socialClass, count, percentage, trend }) => (
           <ClassStatisticItem
             key={socialClass}
             socialClass={socialClass}
             count={count}
             percentage={percentage}
+            trend={trend}
           />
         ))}
       </ul>

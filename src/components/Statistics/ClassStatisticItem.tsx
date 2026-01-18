@@ -1,10 +1,12 @@
 import { SocialClass } from '../../types/Citizen'
+import type { Trend } from './useStatistics'
 import styles from './Statistics.module.css'
 
 interface ClassStatisticItemProps {
   socialClass: SocialClass
   count: number
   percentage: number
+  trend: Trend
 }
 
 function formatPercentage(value: number): string {
@@ -25,7 +27,15 @@ function formatTooltip(socialClass: SocialClass, count: number): string {
   return `${getClassDisplayName(socialClass)}: ${count}`
 }
 
-export function ClassStatisticItem({ socialClass, count, percentage }: ClassStatisticItemProps) {
+function getTrendSymbol(trend: Trend): string {
+  switch (trend) {
+    case 'up': return '▲'
+    case 'down': return '▼'
+    case 'stable': return '—'
+  }
+}
+
+export function ClassStatisticItem({ socialClass, count, percentage, trend }: ClassStatisticItemProps) {
   const tooltipText = formatTooltip(socialClass, count)
 
   return (
@@ -40,6 +50,9 @@ export function ClassStatisticItem({ socialClass, count, percentage }: ClassStat
       />
       <span className={styles.classValue}>
         {formatPercentage(percentage)}
+      </span>
+      <span className={styles.trendIndicator} data-trend={trend}>
+        {getTrendSymbol(trend)}
       </span>
     </li>
   )

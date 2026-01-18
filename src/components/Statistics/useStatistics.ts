@@ -1,11 +1,14 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { Citizen } from '../../types/Citizen'
 import { SocialClass } from '../../types/Citizen'
+
+export type Trend = 'up' | 'down' | 'stable'
 
 export interface ClassStatistic {
   socialClass: SocialClass
   count: number
   percentage: number
+  trend: Trend
 }
 
 export interface Statistics {
@@ -37,24 +40,46 @@ function sortByClassHierarchy(statistics: ClassStatistic[]): ClassStatistic[] {
   })
 }
 
-function calculateClassStatistics(citizens: Citizen[]): ClassStatistic[] {
+function calculateTrend(current: number, previous: number | undefined): Trend {
+  if (previous === undefined) return 'stable'
+  if (current > previous) return 'up'
+  if (current < previous) return 'down'
+  return 'stable'
+}
+
+function calculateClassStatistics(
+  citizens: Citizen[],
+  previousPercentages: Map<SocialClass, number>
+): ClassStatistic[] {
   const total = citizens.length
   const classCounts = countCitizensByClass(citizens)
 
-  const statistics = Object.entries(classCounts).map(([socialClass, count]) => ({
-    socialClass: socialClass as SocialClass,
-    count,
-    percentage: (count / total) * 100
-  }))
+  const statistics = Object.entries(classCounts).map(([socialClass, count]) => {
+    const sc = socialClass as SocialClass
+    const percentage = (count / total) * 100
+    const trend = calculateTrend(percentage, previousPercentages.get(sc))
+    return { socialClass: sc, count, percentage, trend }
+  })
 
   return sortByClassHierarchy(statistics)
 }
 
 export function useStatistics(citizens: Citizen[]): Statistics {
-  return useMemo(() => {
-    const total = citizens.length
-    const byClass = calculateClassStatistics(citizens)
+  const previousPercentagesRef = useRef<Map<SocialClass, number>>(new Map())
 
+  const result = useMemo(() => {
+    const total = citizens.length
+    const byClass = calculateClassStatistics(citizens, previousPercentagesRef.current)
     return { total, byClass }
   }, [citizens])
+
+  useEffect(() => {
+    const newPercentages = new Map<SocialClass, number>()
+    for (const stat of result.byClass) {
+      newPercentages.set(stat.socialClass, stat.percentage)
+    }
+    previousPercentagesRef.current = newPercentages
+  }, [result.byClass])
+
+  return result
 }

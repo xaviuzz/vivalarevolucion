@@ -5,12 +5,6 @@
   align-items: flex-start;
 }
 
-.total {
-  font-size: 1.5rem;
-  color: var(--flexoki-tx);
-  font-weight: bold;
-}
-
 .classList {
   list-style: none;
   padding: 0;
@@ -22,7 +16,7 @@
 
 .classItem {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -65,4 +59,23 @@
   color: var(--flexoki-tx);
   font-weight: bold;
   white-space: nowrap;
+  width: 3.5rem;
+  text-align: right;
+}
+
+.trendIndicator {
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.trendIndicator[data-trend='up'] {
+  color: var(--flexoki-green);
+}
+
+.trendIndicator[data-trend='down'] {
+  color: var(--flexoki-red);
+}
+
+.trendIndicator[data-trend='stable'] {
+  color: var(--flexoki-tx-2);
 }

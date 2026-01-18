@@ -200,3 +200,42 @@ Cuando se especifica un ancho para un elemento contenedor (ej: 75%), el contenid
   font-size: clamp(3rem, 8vw, 10rem); /* Escala proporcionalmente */
 }
 ```
+
+## Efectos secundarios fuera de useMemo
+
+Cuando necesites comparar valores entre renders (estado previo vs actual), actualiza el ref en `useEffect`, no dentro de `useMemo`. Actualizar refs dentro de `useMemo` causa que el valor se sobrescriba antes de poder comparar.
+
+### ❌ Incorrecto
+
+```typescript
+export function useStatistics(citizens: Citizen[]): Statistics {
+  const previousRef = useRef<Map<string, number>>(new Map())
+
+  return useMemo(() => {
+    const current = calculateCurrent(citizens)
+    const trend = compareTrend(current, previousRef.current)
+    previousRef.current = current // Se sobrescribe inmediatamente
+    return { current, trend }
+  }, [citizens])
+}
+```
+
+### ✅ Correcto
+
+```typescript
+export function useStatistics(citizens: Citizen[]): Statistics {
+  const previousRef = useRef<Map<string, number>>(new Map())
+
+  const result = useMemo(() => {
+    const current = calculateCurrent(citizens)
+    const trend = compareTrend(current, previousRef.current)
+    return { current, trend }
+  }, [citizens])
+
+  useEffect(() => {
+    previousRef.current = result.current
+  }, [result.current])
+
+  return result
+}
+```
