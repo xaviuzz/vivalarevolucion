@@ -11,11 +11,11 @@ export function GameControls({ currentTurn, onEndTurn }: GameControlsProps) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.content}>
-        <p className={styles.turnDisplay}>Turno {currentTurn}</p>
         <button className={styles.endTurnButton} onClick={onEndTurn}>
           Acabar turno
         </button>
         <ActionToggle action={WELFARE_STATE_ACTION} />
+        <span className={styles.turnDisplay}>Turno {currentTurn}</span>
       </div>
     </div>
   )
