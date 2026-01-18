@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { evolveCitizen, evolveCitizens } from './evolutionEngine'
 import { Citizen, SocialClass } from '../../types/Citizen'
+import { Militancy } from '../../types/Militancy'
 
 describe('evolveCitizen', () => {
   it('preserva el ID del ciudadano durante la evoluci\u00f3n', () => {
@@ -177,7 +178,7 @@ describe('evolveCitizens', () => {
 })
 
 function createCitizen(id: number, socialClass: SocialClass): Citizen {
-  return { id, socialClass }
+  return { id, socialClass, militancy: Militancy.STATUSQUO }
 }
 
 class EvolveCitizenSUT {

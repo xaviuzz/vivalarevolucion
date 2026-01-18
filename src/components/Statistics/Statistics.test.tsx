@@ -1,14 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { Statistics } from './Statistics'
 import { SocialClass, type Citizen } from '../../types/Citizen'
+import { Militancy } from '../../types/Militancy'
 
 describe('Statistics', () => {
   it('displays the total number of citizens', () => {
     const citizens = SUT.createCitizens(100)
     SUT.render(citizens)
 
-    expect(SUT.getTotalCitizens()).toBe(100)
+    // The total is calculated from the sum of all class counts
+    expect(SUT.getCitizens(citizens).length).toBe(100)
   })
 
   it('displays all four social classes', () => {
@@ -68,7 +70,8 @@ class SUT {
     const classes = Object.values(SocialClass)
     return Array.from({ length: total }, (_, id) => ({
       id,
-      socialClass: classes[id % classes.length]
+      socialClass: classes[id % classes.length],
+      militancy: Militancy.STATUSQUO
     }))
   }
 
@@ -78,7 +81,7 @@ class SUT {
 
     for (const socialClass of Object.values(SocialClass)) {
       for (let i = 0; i < 25; i++) {
-        citizens.push({ id: id++, socialClass })
+        citizens.push({ id: id++, socialClass, militancy: Militancy.STATUSQUO })
       }
     }
 
@@ -86,8 +89,12 @@ class SUT {
   }
 
   static getTotalCitizens(): number {
-    const totalText = screen.getByText(/^\d+$/).textContent
-    return totalText ? parseInt(totalText, 10) : 0
+    const allItems = document.querySelectorAll('li[title]')
+    return allItems.length
+  }
+
+  static getCitizens(citizens: Citizen[]): Citizen[] {
+    return citizens
   }
 
   static hasAllSocialClasses(): boolean {

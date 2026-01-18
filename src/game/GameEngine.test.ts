@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GameEngine } from './GameEngine'
 import { SocialClass } from '../types/Citizen'
+import { Militancy } from '../types/Militancy'
 
 vi.mock('./population/citizenGenerator', () => ({
   generateCitizens: vi.fn(() => [
-    { id: 1, socialClass: SocialClass.CLASE_MEDIA },
-    { id: 2, socialClass: SocialClass.OBREROS },
-    { id: 3, socialClass: SocialClass.ELITES }
+    { id: 1, socialClass: SocialClass.CLASE_MEDIA, militancy: Militancy.STATUSQUO },
+    { id: 2, socialClass: SocialClass.OBREROS, militancy: Militancy.STATUSQUO },
+    { id: 3, socialClass: SocialClass.ELITES, militancy: Militancy.STATUSQUO }
   ])
 }))
 
@@ -29,8 +30,8 @@ describe('GameEngine', () => {
     it('crea motor desde estado proporcionado', () => {
       const state = {
         citizens: [
-          { id: 10, socialClass: SocialClass.DESPOSEIDOS },
-          { id: 20, socialClass: SocialClass.ELITES }
+          { id: 10, socialClass: SocialClass.DESPOSEIDOS, militancy: Militancy.STATUSQUO },
+          { id: 20, socialClass: SocialClass.ELITES, militancy: Militancy.STATUSQUO }
         ],
         currentTurn: 5,
         activeActions: []
@@ -145,7 +146,7 @@ describe('GameEngine', () => {
       const engine = GameEngine.createNew()
       const citizens = engine.getCitizens()
 
-      citizens.push({ id: 999, socialClass: SocialClass.ELITES })
+      citizens.push({ id: 999, socialClass: SocialClass.ELITES, militancy: Militancy.STATUSQUO })
 
       expect(engine.getCitizens()).toHaveLength(3)
     })

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useStatistics } from './useStatistics'
 import { SocialClass, type Citizen } from '../../types/Citizen'
+import { Militancy } from '../../types/Militancy'
 
 describe('useStatistics', () => {
   it('calculates total number of citizens', () => {
@@ -74,7 +75,8 @@ class SUT {
     const classes = Object.values(SocialClass)
     return Array.from({ length: total }, (_, id) => ({
       id,
-      socialClass: classes[id % classes.length]
+      socialClass: classes[id % classes.length],
+      militancy: Militancy.STATUSQUO
     }))
   }
 
@@ -84,7 +86,7 @@ class SUT {
 
     for (const socialClass of Object.values(SocialClass)) {
       for (let i = 0; i < 25; i++) {
-        citizens.push({ id: id++, socialClass })
+        citizens.push({ id: id++, socialClass, militancy: Militancy.STATUSQUO })
       }
     }
 
@@ -96,11 +98,11 @@ class SUT {
     let id = 0
 
     for (let i = 0; i < 60; i++) {
-      citizens.push({ id: id++, socialClass: SocialClass.DESPOSEIDOS })
+      citizens.push({ id: id++, socialClass: SocialClass.DESPOSEIDOS, militancy: Militancy.STATUSQUO })
     }
 
     for (let i = 0; i < 40; i++) {
-      citizens.push({ id: id++, socialClass: SocialClass.OBREROS })
+      citizens.push({ id: id++, socialClass: SocialClass.OBREROS, militancy: Militancy.STATUSQUO })
     }
 
     return citizens

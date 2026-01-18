@@ -1,3 +1,5 @@
+import { Militancy } from './Militancy'
+
 /**
  * Social class categories for citizens
  */
@@ -14,6 +16,7 @@ export enum SocialClass {
 export interface Citizen {
   id: number
   socialClass: SocialClass
+  militancy: Militancy
 }
 
 /**

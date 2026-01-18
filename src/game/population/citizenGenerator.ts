@@ -1,4 +1,6 @@
 import { Citizen, SOCIAL_CLASSES } from '../../types/Citizen'
+import { Militancy } from '../../types/Militancy'
+import { assignInitialMilitancy } from './militancyAssigner'
 
 const MINIMUM_POPULATION = 100
 const POPULATION_RANGE = 401
@@ -34,7 +36,7 @@ function createCitizensFromCounts(counts: number[]): Citizen[] {
 
   SOCIAL_CLASSES.forEach((socialClass, index) => {
     for (let i = 0; i < counts[index]; i++) {
-      citizens.push({ id: id++, socialClass })
+      citizens.push({ id: id++, socialClass, militancy: Militancy.STATUSQUO })
     }
   })
 
@@ -55,6 +57,7 @@ export function generateCitizens(): Citizen[] {
   const distribution = generateRandomDistribution()
   const counts = calculateClassCounts(distribution, populationSize)
   const citizens = createCitizensFromCounts(counts)
+  const shuffled = shuffleArray(citizens)
 
-  return shuffleArray(citizens)
+  return assignInitialMilitancy(shuffled)
 }

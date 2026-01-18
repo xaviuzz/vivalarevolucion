@@ -5,6 +5,7 @@ import { SocialClass } from '../../types/Citizen'
 import { TRANSITION_PROBABILITIES, TransitionTable } from '../evolution/evolutionProbabilities'
 import { evolveCitizen } from '../evolution/evolutionEngine'
 import { Citizen } from '../../types/Citizen'
+import { Militancy } from '../../types/Militancy'
 
 describe('WELFARE_STATE_ACTION', () => {
   describe('estructura de la acción', () => {
@@ -158,7 +159,7 @@ class WelfareStateSUT {
   ): number {
     let transitions = 0
     for (let i = 0; i < iterations; i++) {
-      const citizen: Citizen = { id: i, socialClass: fromClass }
+      const citizen: Citizen = { id: i, socialClass: fromClass, militancy: Militancy.STATUSQUO }
       const evolved = evolveCitizen(citizen, probabilities)
       if (evolved.socialClass === toClass) {
         transitions++

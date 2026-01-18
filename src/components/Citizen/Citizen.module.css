@@ -1,10 +1,26 @@
 .citizen {
   width: var(--citizen-cell-size);
   height: var(--citizen-cell-size);
+}
+
+/* Formas por militancia */
+
+/* Status Quo - Cuadrado */
+.citizen[data-militancy='STATUSQUO'] {
   border-radius: 2px;
 }
 
-/* Color mapping con attribute selectors */
+/* Fascismo - Círculo */
+.citizen[data-militancy='FASCISMO'] {
+  border-radius: 50%;
+}
+
+/* Anarquismo - Triángulo (punta arriba) */
+.citizen[data-militancy='ANARQUISMO'] {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* Color mapping por clase social */
 .citizen[data-class='DESPOSEIDOS'] {
   background-color: var(--class-desposeidos);
 }

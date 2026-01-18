@@ -5,13 +5,14 @@ import {
   SocialClass,
   Citizen as CitizenType
 } from '../../types/Citizen'
+import { Militancy } from '../../types/Militancy'
 
 describe('Barrio', () => {
   it('renders all citizens', () => {
     const citizens: CitizenType[] = [
-      { id: 0, socialClass: SocialClass.DESPOSEIDOS },
-      { id: 1, socialClass: SocialClass.OBREROS },
-      { id: 2, socialClass: SocialClass.CLASE_MEDIA }
+      { id: 0, socialClass: SocialClass.DESPOSEIDOS, militancy: Militancy.STATUSQUO },
+      { id: 1, socialClass: SocialClass.OBREROS, militancy: Militancy.STATUSQUO },
+      { id: 2, socialClass: SocialClass.CLASE_MEDIA, militancy: Militancy.STATUSQUO }
     ]
 
     SUT.render(citizens)
@@ -20,8 +21,8 @@ describe('Barrio', () => {
 
   it('renders citizens with correct social classes', () => {
     const citizens: CitizenType[] = [
-      { id: 0, socialClass: SocialClass.ELITES },
-      { id: 1, socialClass: SocialClass.OBREROS }
+      { id: 0, socialClass: SocialClass.ELITES, militancy: Militancy.STATUSQUO },
+      { id: 1, socialClass: SocialClass.OBREROS, militancy: Militancy.STATUSQUO }
     ]
 
     SUT.render(citizens)

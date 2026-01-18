@@ -2,6 +2,7 @@ import { Barrio } from '../Barrio/Barrio'
 import { Title } from '../Title/Title'
 import { GameControls } from '../GameControls/GameControls'
 import { Statistics } from '../Statistics/Statistics'
+import { MilitancyStatistics } from '../Statistics/MilitancyStatistics'
 import { GameConsole } from '../GameConsole/GameConsole'
 import { GameEngineProvider, useGameEngineContext } from '../../contexts/GameEngineContext'
 import styles from './HomePage.module.css'
@@ -20,6 +21,7 @@ function HomePageContent() {
         </div>
         <div className={styles.statisticsSection}>
           <Statistics citizens={citizens} />
+          <MilitancyStatistics citizens={citizens} />
         </div>
       </div>
     </div>

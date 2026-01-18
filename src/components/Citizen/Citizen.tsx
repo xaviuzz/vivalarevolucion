@@ -6,5 +6,11 @@ interface CitizenProps {
 }
 
 export function Citizen({ citizen }: CitizenProps) {
-  return <div className={styles.citizen} data-class={citizen.socialClass} />
+  return (
+    <div
+      className={styles.citizen}
+      data-class={citizen.socialClass}
+      data-militancy={citizen.militancy}
+    />
+  )
 }

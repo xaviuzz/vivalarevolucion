@@ -2,12 +2,13 @@ import { renderHook, act, RenderHookResult } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useGameEngine, GameEngineHook } from './useGameEngine'
 import { SocialClass, Citizen } from '../types/Citizen'
+import { Militancy } from '../types/Militancy'
 
 vi.mock('../game/population/citizenGenerator', () => ({
   generateCitizens: vi.fn(() => [
-    { id: 1, socialClass: SocialClass.CLASE_MEDIA },
-    { id: 2, socialClass: SocialClass.OBREROS },
-    { id: 3, socialClass: SocialClass.ELITES }
+    { id: 1, socialClass: SocialClass.CLASE_MEDIA, militancy: Militancy.STATUSQUO },
+    { id: 2, socialClass: SocialClass.OBREROS, militancy: Militancy.STATUSQUO },
+    { id: 3, socialClass: SocialClass.ELITES, militancy: Militancy.STATUSQUO }
   ])
 }))
 
@@ -64,7 +65,9 @@ describe('useGameEngine', () => {
   it('mantiene número total de ciudadanos tras múltiples turnos', () => {
     const hook = SUT.render()
 
-    SUT.endTurnMultiple(hook, 3)
+    SUT.endTurn(hook)
+    SUT.endTurn(hook)
+    SUT.endTurn(hook)
 
     expect(SUT.getCitizens(hook)).toHaveLength(3)
     expect(SUT.getTurn(hook)).toBe(4)

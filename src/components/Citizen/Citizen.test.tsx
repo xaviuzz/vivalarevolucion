@@ -2,12 +2,14 @@ import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { Citizen } from './Citizen'
 import { SocialClass, Citizen as CitizenType } from '../../types/Citizen'
+import { Militancy } from '../../types/Militancy'
 
 describe('Citizen', () => {
   it('renders without crashing', () => {
     const citizen: CitizenType = {
       id: 1,
-      socialClass: SocialClass.OBREROS
+      socialClass: SocialClass.OBREROS,
+      militancy: Militancy.STATUSQUO
     }
 
     SUT.render(citizen)
@@ -17,7 +19,8 @@ describe('Citizen', () => {
   it('includes the social class in data attribute for styling', () => {
     const citizen: CitizenType = {
       id: 1,
-      socialClass: SocialClass.DESPOSEIDOS
+      socialClass: SocialClass.DESPOSEIDOS,
+      militancy: Militancy.STATUSQUO
     }
 
     SUT.render(citizen)
