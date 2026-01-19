@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { Citizen } from '../../types/Citizen'
 import { SocialClass } from '../../types/Citizen'
+import { countByClassRecord } from '../../utils/citizenUtils'
 
 export type Trend = 'up' | 'down' | 'stable'
 
@@ -14,13 +15,6 @@ export interface ClassStatistic {
 export interface Statistics {
   total: number
   byClass: ClassStatistic[]
-}
-
-function countCitizensByClass(citizens: Citizen[]): Record<SocialClass, number> {
-  return citizens.reduce((counts, citizen) => {
-    counts[citizen.socialClass] = (counts[citizen.socialClass] || 0) + 1
-    return counts
-  }, {} as Record<SocialClass, number>)
 }
 
 const CLASS_HIERARCHY_ORDER = [
@@ -52,7 +46,7 @@ function calculateClassStatistics(
   previousPercentages: Map<SocialClass, number>
 ): ClassStatistic[] {
   const total = citizens.length
-  const classCounts = countCitizensByClass(citizens)
+  const classCounts = countByClassRecord(citizens)
 
   const statistics = Object.entries(classCounts).map(([socialClass, count]) => {
     const sc = socialClass as SocialClass

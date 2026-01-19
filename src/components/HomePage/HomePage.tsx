@@ -5,6 +5,7 @@ import { Statistics } from '../Statistics/Statistics'
 import { MilitancyStatistics } from '../Statistics/MilitancyStatistics'
 import { GameConsole } from '../GameConsole/GameConsole'
 import { GameEngineProvider, useGameEngineContext } from '../../contexts/GameEngineContext'
+import { AVAILABLE_ACTIONS } from '../../game/actions'
 import styles from './HomePage.module.css'
 
 function HomePageContent() {
@@ -16,7 +17,7 @@ function HomePageContent() {
       <div className={styles.mainContent}>
         <div className={styles.barrioSection}>
           <Barrio citizens={citizens} />
-          <GameControls currentTurn={currentTurn} onEndTurn={endTurn} />
+          <GameControls currentTurn={currentTurn} onEndTurn={endTurn} availableActions={AVAILABLE_ACTIONS} />
           <GameConsole logs={logs} />
         </div>
         <div className={styles.statisticsSection}>

@@ -3,7 +3,7 @@ import { userEvent } from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import { GameControls } from './GameControls'
 import { ActionToggle } from './ActionToggle'
-import { WELFARE_STATE_ACTION } from '../../game/actions'
+import { WELFARE_STATE_ACTION, AVAILABLE_ACTIONS } from '../../game/actions'
 
 const mockToggle = vi.fn()
 const mockUseActionToggle = vi.fn()
@@ -91,6 +91,7 @@ class SUT {
       <GameControls
         currentTurn={currentTurn}
         onEndTurn={SUT.mockOnEndTurn}
+        availableActions={AVAILABLE_ACTIONS}
       />
     )
   }

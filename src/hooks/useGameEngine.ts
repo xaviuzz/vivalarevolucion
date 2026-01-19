@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react'
-import { Citizen, SocialClass, SOCIAL_CLASSES } from '../types/Citizen'
+import { Citizen, SOCIAL_CLASSES } from '../types/Citizen'
 import { Action } from '../types/Action'
 import { GameEngine } from '../game/GameEngine'
+import { countByClass } from '../utils/citizenUtils'
 
 export interface GameLog {
   turn: number
@@ -16,17 +17,6 @@ export interface GameEngineHook {
   endTurn: () => void
   activateAction: (action: Action) => void
   deactivateAction: (actionId: string) => void
-}
-
-function countByClass(citizens: Citizen[]): Map<SocialClass, number> {
-  const counts = new Map<SocialClass, number>()
-  for (const sc of SOCIAL_CLASSES) {
-    counts.set(sc, 0)
-  }
-  for (const c of citizens) {
-    counts.set(c.socialClass, (counts.get(c.socialClass) ?? 0) + 1)
-  }
-  return counts
 }
 
 function generateTurnLog(before: Citizen[], after: Citizen[]): string {
