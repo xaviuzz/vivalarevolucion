@@ -2,47 +2,41 @@ import { describe, it, expect } from 'vitest'
 import { assignInitialMilitancy } from './militancyAssigner'
 import { SocialClass } from '../../types/Citizen'
 import { Militancy } from '../../types/Militancy'
-
-function createTestCitizens(count: number) {
-  return Array.from({ length: count }, (_, i) => ({
-    id: i,
-    socialClass: SocialClass.OBREROS,
-    militancy: Militancy.STATUSQUO
-  }))
-}
+import { createManyCitizens } from '../../test/fixtures'
+import { filterByMilitancy } from '../../test/citizen-helpers'
 
 describe('assignInitialMilitancy', () => {
   it('asigna exactamente 1 FASCISMO', () => {
-    const citizens = createTestCitizens(100)
+    const citizens = createManyCitizens(100, SocialClass.OBREROS)
     const result = assignInitialMilitancy(citizens)
-    const fascists = result.filter(c => c.militancy === Militancy.FASCISMO)
+    const fascists = filterByMilitancy(result, Militancy.FASCISMO)
     expect(fascists).toHaveLength(1)
   })
 
   it('asigna exactamente 1 ANARQUISMO', () => {
-    const citizens = createTestCitizens(100)
+    const citizens = createManyCitizens(100, SocialClass.OBREROS)
     const result = assignInitialMilitancy(citizens)
-    const anarchists = result.filter(c => c.militancy === Militancy.ANARQUISMO)
+    const anarchists = filterByMilitancy(result, Militancy.ANARQUISMO)
     expect(anarchists).toHaveLength(1)
   })
 
   it('asigna STATUSQUO al resto', () => {
-    const citizens = createTestCitizens(100)
+    const citizens = createManyCitizens(100, SocialClass.OBREROS)
     const result = assignInitialMilitancy(citizens)
-    const statusquo = result.filter(c => c.militancy === Militancy.STATUSQUO)
+    const statusquo = filterByMilitancy(result, Militancy.STATUSQUO)
     expect(statusquo).toHaveLength(98)
   })
 
   it('asigna FASCISMO y ANARQUISMO a ciudadanos diferentes', () => {
-    const citizens = createTestCitizens(100)
+    const citizens = createManyCitizens(100, SocialClass.OBREROS)
     const result = assignInitialMilitancy(citizens)
-    const fascist = result.find(c => c.militancy === Militancy.FASCISMO)
-    const anarchist = result.find(c => c.militancy === Militancy.ANARQUISMO)
+    const fascist = filterByMilitancy(result, Militancy.FASCISMO)[0]
+    const anarchist = filterByMilitancy(result, Militancy.ANARQUISMO)[0]
     expect(fascist?.id).not.toBe(anarchist?.id)
   })
 
   it('mantiene IDs y socialClass sin cambios', () => {
-    const citizens = createTestCitizens(10)
+    const citizens = createManyCitizens(10, SocialClass.OBREROS)
     const result = assignInitialMilitancy(citizens)
     result.forEach((citizen, index) => {
       expect(citizen.id).toBe(index)
@@ -51,16 +45,16 @@ describe('assignInitialMilitancy', () => {
   })
 
   it('maneja poblacion de 2 ciudadanos', () => {
-    const citizens = createTestCitizens(2)
+    const citizens = createManyCitizens(2, SocialClass.OBREROS)
     const result = assignInitialMilitancy(citizens)
-    const fascists = result.filter(c => c.militancy === Militancy.FASCISMO)
-    const anarchists = result.filter(c => c.militancy === Militancy.ANARQUISMO)
+    const fascists = filterByMilitancy(result, Militancy.FASCISMO)
+    const anarchists = filterByMilitancy(result, Militancy.ANARQUISMO)
     expect(fascists).toHaveLength(1)
     expect(anarchists).toHaveLength(1)
   })
 
   it('maneja poblacion de 1 ciudadano', () => {
-    const citizens = createTestCitizens(1)
+    const citizens = createManyCitizens(1, SocialClass.OBREROS)
     const result = assignInitialMilitancy(citizens)
     expect(result[0].militancy).toBe(Militancy.STATUSQUO)
   })

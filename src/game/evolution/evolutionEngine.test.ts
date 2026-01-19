@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { evolveCitizen, evolveCitizens } from './evolutionEngine'
 import { Citizen, SocialClass } from '../../types/Citizen'
-import { Militancy } from '../../types/Militancy'
+import { createCitizen, createManyCitizens } from '../../test/fixtures'
 
 describe('evolveCitizen', () => {
   it('preserva el ID del ciudadano durante la evoluci\u00f3n', () => {
@@ -169,17 +169,13 @@ describe('evolveCitizens', () => {
   })
 
   it('puede cambiar la clase de algunos ciudadanos', () => {
-    const citizens = EvolveCitizensSUT.createManyCitizens(100, SocialClass.CLASE_MEDIA)
+    const citizens = createManyCitizens(100, SocialClass.CLASE_MEDIA)
 
     const evolved = EvolveCitizensSUT.evolve(citizens)
 
     expect(EvolveCitizensSUT.countClassChanges(SocialClass.CLASE_MEDIA, evolved)).toBeGreaterThan(0)
   })
 })
-
-function createCitizen(id: number, socialClass: SocialClass): Citizen {
-  return { id, socialClass, militancy: Militancy.STATUSQUO }
-}
 
 class EvolveCitizenSUT {
   static mockRandom(value: number): void {
@@ -233,10 +229,6 @@ class EvolveCitizenSUT {
 class EvolveCitizensSUT {
   static createCitizens(specs: Array<{ id: number; socialClass: SocialClass }>): Citizen[] {
     return specs.map(spec => createCitizen(spec.id, spec.socialClass))
-  }
-
-  static createManyCitizens(count: number, socialClass: SocialClass): Citizen[] {
-    return Array.from({ length: count }, (_, i) => createCitizen(i, socialClass))
   }
 
   static evolve(citizens: Citizen[]): Citizen[] {

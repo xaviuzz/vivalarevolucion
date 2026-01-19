@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { generateCitizens } from './citizenGenerator'
 import { SocialClass, Citizen } from '../../types/Citizen'
+import { countByClass } from '../../test/citizen-helpers'
 
 describe('generateCitizens', () => {
   it('generates between 100 and 500 citizens', () => {
@@ -27,7 +28,7 @@ describe('generateCitizens', () => {
 
   it('distributes classes with random percentages that sum to 100%', () => {
     const citizens = generateCitizens()
-    const counts = SUT.countByClass(citizens)
+    const counts = countByClass(citizens)
 
     expect(SUT.getTotalCount(counts)).toBe(citizens.length)
     expect(SUT.countPopulatedClasses(counts)).toBeGreaterThanOrEqual(3)
@@ -47,17 +48,6 @@ describe('generateCitizens', () => {
 })
 
 class SUT {
-  static countByClass(citizens: Citizen[]): Record<SocialClass, number> {
-    const counts: Record<SocialClass, number> = {
-      [SocialClass.DESPOSEIDOS]: 0,
-      [SocialClass.OBREROS]: 0,
-      [SocialClass.CLASE_MEDIA]: 0,
-      [SocialClass.ELITES]: 0
-    }
-    citizens.forEach((c) => counts[c.socialClass]++)
-    return counts
-  }
-
   static getTotalCount(counts: Record<SocialClass, number>): number {
     return Object.values(counts).reduce((sum, n) => sum + n, 0)
   }
@@ -67,7 +57,7 @@ class SUT {
   }
 
   static getDistributionSignature(citizens: Citizen[]): string {
-    const counts = SUT.countByClass(citizens)
+    const counts = countByClass(citizens)
     const percentages = Object.values(counts).map(n =>
       Math.floor((n / citizens.length) * 100)
     )

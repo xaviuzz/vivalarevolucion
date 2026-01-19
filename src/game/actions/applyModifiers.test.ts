@@ -3,6 +3,7 @@ import { applyActionModifiers, applyMultipleActions } from './applyModifiers'
 import { SocialClass } from '../../types/Citizen'
 import { TRANSITION_PROBABILITIES, TransitionTable } from '../evolution/evolutionProbabilities'
 import { Action, TransitionModifierTable } from '../../types/Action'
+import { rowsAreEqual, sumRow } from '../../test/probability-helpers'
 
 describe('applyActionModifiers', () => {
   it('aplica modificadores positivos correctamente', () => {
@@ -53,7 +54,7 @@ describe('applyActionModifiers', () => {
 
     const modified = ApplyModifiersSUT.applyAction(TRANSITION_PROBABILITIES, action)
 
-    expect(ApplyModifiersSUT.sumRow(modified[SocialClass.CLASE_MEDIA])).toBeCloseTo(1.0, 5)
+    expect(sumRow(modified[SocialClass.CLASE_MEDIA])).toBeCloseTo(1.0, 5)
   })
 
   it('no modifica filas con modificadores de cero', () => {
@@ -61,7 +62,7 @@ describe('applyActionModifiers', () => {
 
     const modified = ApplyModifiersSUT.applyAction(TRANSITION_PROBABILITIES, action)
 
-    expect(ApplyModifiersSUT.rowsAreEqual(
+    expect(rowsAreEqual(
       modified[SocialClass.ELITES],
       TRANSITION_PROBABILITIES[SocialClass.ELITES]
     )).toBe(true)
@@ -113,7 +114,7 @@ describe('applyMultipleActions', () => {
     const modified = ApplyModifiersSUT.applyMultiple(TRANSITION_PROBABILITIES, [action])
 
     for (const socialClass of Object.values(SocialClass)) {
-      expect(ApplyModifiersSUT.sumRow(modified[socialClass])).toBeCloseTo(1.0, 5)
+      expect(sumRow(modified[socialClass])).toBeCloseTo(1.0, 5)
     }
   })
 })
@@ -163,18 +164,5 @@ class ApplyModifiersSUT {
 
   static getRawProbability(row: TransitionTable, target: SocialClass): number {
     return row[target]
-  }
-
-  static sumRow(row: TransitionTable): number {
-    return Object.values(row).reduce((acc, prob) => acc + prob, 0)
-  }
-
-  static rowsAreEqual(row1: TransitionTable, row2: TransitionTable): boolean {
-    for (const socialClass of Object.values(SocialClass)) {
-      if (Math.abs(row1[socialClass] - row2[socialClass]) > 0.000001) {
-        return false
-      }
-    }
-    return true
   }
 }

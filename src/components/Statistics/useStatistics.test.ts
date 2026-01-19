@@ -3,24 +3,25 @@ import { renderHook } from '@testing-library/react'
 import { useStatistics } from './useStatistics'
 import { SocialClass, type Citizen } from '../../types/Citizen'
 import { Militancy } from '../../types/Militancy'
+import { createCitizens, createBalancedCitizens } from '../../test/fixtures'
 
 describe('useStatistics', () => {
   it('calculates total number of citizens', () => {
-    const citizens = SUT.createCitizens(150)
+    const citizens = createCitizens(150)
     const statistics = SUT.useStatistics(citizens)
 
     expect(statistics.total).toBe(150)
   })
 
   it('calculates statistics for all social classes', () => {
-    const citizens = SUT.createBalancedCitizens()
+    const citizens = createBalancedCitizens()
     const statistics = SUT.useStatistics(citizens)
 
     expect(statistics.byClass).toHaveLength(4)
   })
 
   it('calculates correct count for each social class', () => {
-    const citizens = SUT.createBalancedCitizens()
+    const citizens = createBalancedCitizens()
     const statistics = SUT.useStatistics(citizens)
 
     const desposeidos = SUT.findClassStatistic(statistics.byClass, SocialClass.DESPOSEIDOS)
@@ -35,7 +36,7 @@ describe('useStatistics', () => {
   })
 
   it('calculates correct percentage for each social class', () => {
-    const citizens = SUT.createBalancedCitizens()
+    const citizens = createBalancedCitizens()
     const statistics = SUT.useStatistics(citizens)
 
     statistics.byClass.forEach(stat => {
@@ -69,28 +70,6 @@ class SUT {
   static useStatistics(citizens: Citizen[]) {
     const { result } = renderHook(() => useStatistics(citizens))
     return result.current
-  }
-
-  static createCitizens(total: number): Citizen[] {
-    const classes = Object.values(SocialClass)
-    return Array.from({ length: total }, (_, id) => ({
-      id,
-      socialClass: classes[id % classes.length],
-      militancy: Militancy.STATUSQUO
-    }))
-  }
-
-  static createBalancedCitizens(): Citizen[] {
-    const citizens: Citizen[] = []
-    let id = 0
-
-    for (const socialClass of Object.values(SocialClass)) {
-      for (let i = 0; i < 25; i++) {
-        citizens.push({ id: id++, socialClass, militancy: Militancy.STATUSQUO })
-      }
-    }
-
-    return citizens
   }
 
   static createUnbalancedCitizens(): Citizen[] {

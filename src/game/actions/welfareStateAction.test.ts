@@ -3,9 +3,7 @@ import { WELFARE_STATE_ACTION } from './welfareStateAction'
 import { applyActionModifiers } from './applyModifiers'
 import { SocialClass } from '../../types/Citizen'
 import { TRANSITION_PROBABILITIES, TransitionTable } from '../evolution/evolutionProbabilities'
-import { evolveCitizen } from '../evolution/evolutionEngine'
-import { Citizen } from '../../types/Citizen'
-import { Militancy } from '../../types/Militancy'
+import { calculateTransitionRate, rowsAreEqual } from '../../test/probability-helpers'
 
 describe('WELFARE_STATE_ACTION', () => {
   describe('estructura de la acción', () => {
@@ -31,7 +29,7 @@ describe('WELFARE_STATE_ACTION', () => {
     it('no modifica las probabilidades de las ELITES', () => {
       const modified = WelfareStateSUT.applyToBase()
 
-      expect(WelfareStateSUT.rowsAreEqual(
+      expect(rowsAreEqual(
         modified[SocialClass.ELITES],
         TRANSITION_PROBABILITIES[SocialClass.ELITES]
       )).toBe(true)
@@ -84,7 +82,7 @@ describe('WELFARE_STATE_ACTION', () => {
     it('DESPOSEIDOS tienen mayor probabilidad de ascender a OBREROS con Estado del Bienestar', () => {
       const ITERATIONS = 10000
 
-      const baseRate = WelfareStateSUT.calculateTransitionRate(
+      const baseRate = calculateTransitionRate(
         SocialClass.DESPOSEIDOS,
         SocialClass.OBREROS,
         ITERATIONS,
@@ -92,7 +90,7 @@ describe('WELFARE_STATE_ACTION', () => {
       )
 
       const modifiedProbs = WelfareStateSUT.applyToBase()
-      const modifiedRate = WelfareStateSUT.calculateTransitionRate(
+      const modifiedRate = calculateTransitionRate(
         SocialClass.DESPOSEIDOS,
         SocialClass.OBREROS,
         ITERATIONS,
@@ -105,7 +103,7 @@ describe('WELFARE_STATE_ACTION', () => {
     it('OBREROS tienen menor probabilidad de caer a DESPOSEIDOS con Estado del Bienestar', () => {
       const ITERATIONS = 10000
 
-      const baseRate = WelfareStateSUT.calculateTransitionRate(
+      const baseRate = calculateTransitionRate(
         SocialClass.OBREROS,
         SocialClass.DESPOSEIDOS,
         ITERATIONS,
@@ -113,7 +111,7 @@ describe('WELFARE_STATE_ACTION', () => {
       )
 
       const modifiedProbs = WelfareStateSUT.applyToBase()
-      const modifiedRate = WelfareStateSUT.calculateTransitionRate(
+      const modifiedRate = calculateTransitionRate(
         SocialClass.OBREROS,
         SocialClass.DESPOSEIDOS,
         ITERATIONS,
@@ -140,31 +138,5 @@ class WelfareStateSUT {
 
   static applyToBase(): Record<SocialClass, TransitionTable> {
     return applyActionModifiers(TRANSITION_PROBABILITIES, WELFARE_STATE_ACTION)
-  }
-
-  static rowsAreEqual(row1: TransitionTable, row2: TransitionTable): boolean {
-    for (const socialClass of Object.values(SocialClass)) {
-      if (Math.abs(row1[socialClass] - row2[socialClass]) > 0.000001) {
-        return false
-      }
-    }
-    return true
-  }
-
-  static calculateTransitionRate(
-    fromClass: SocialClass,
-    toClass: SocialClass,
-    iterations: number,
-    probabilities: Record<SocialClass, TransitionTable>
-  ): number {
-    let transitions = 0
-    for (let i = 0; i < iterations; i++) {
-      const citizen: Citizen = { id: i, socialClass: fromClass, militancy: Militancy.STATUSQUO }
-      const evolved = evolveCitizen(citizen, probabilities)
-      if (evolved.socialClass === toClass) {
-        transitions++
-      }
-    }
-    return transitions / iterations
   }
 }

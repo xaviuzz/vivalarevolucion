@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { Statistics } from './Statistics'
 import { SocialClass, type Citizen } from '../../types/Citizen'
-import { Militancy } from '../../types/Militancy'
+import { createCitizens, createBalancedCitizens } from '../../test/fixtures'
 
 describe('Statistics', () => {
   it('displays the total number of citizens', () => {
-    const citizens = SUT.createCitizens(100)
+    const citizens = createCitizens(100)
     SUT.render(citizens)
 
     // The total is calculated from the sum of all class counts
@@ -14,14 +14,14 @@ describe('Statistics', () => {
   })
 
   it('displays all four social classes', () => {
-    const citizens = SUT.createCitizens(100)
+    const citizens = createCitizens(100)
     SUT.render(citizens)
 
     expect(SUT.hasAllSocialClasses()).toBe(true)
   })
 
   it('displays correct count for each social class', () => {
-    const citizens = SUT.createBalancedCitizens()
+    const citizens = createBalancedCitizens()
     SUT.render(citizens)
 
     expect(SUT.getClassCount(SocialClass.DESPOSEIDOS)).toBe(25)
@@ -31,7 +31,7 @@ describe('Statistics', () => {
   })
 
   it('displays correct percentage for each social class', () => {
-    const citizens = SUT.createBalancedCitizens()
+    const citizens = createBalancedCitizens()
     SUT.render(citizens)
 
     expect(SUT.getClassPercentage(SocialClass.DESPOSEIDOS)).toBe('25.0%')
@@ -41,7 +41,7 @@ describe('Statistics', () => {
   })
 
   it('displays color indicators for each social class', () => {
-    const citizens = SUT.createCitizens(100)
+    const citizens = createCitizens(100)
     SUT.render(citizens)
 
     expect(SUT.hasColorIndicator(SocialClass.DESPOSEIDOS)).toBe(true)
@@ -51,7 +51,7 @@ describe('Statistics', () => {
   })
 
   it('displays class names correctly', () => {
-    const citizens = SUT.createCitizens(100)
+    const citizens = createCitizens(100)
     SUT.render(citizens)
 
     expect(SUT.hasClassName('Desposeídos')).toBe(true)
@@ -64,28 +64,6 @@ describe('Statistics', () => {
 class SUT {
   static render(citizens: Citizen[]) {
     render(<Statistics citizens={citizens} />)
-  }
-
-  static createCitizens(total: number): Citizen[] {
-    const classes = Object.values(SocialClass)
-    return Array.from({ length: total }, (_, id) => ({
-      id,
-      socialClass: classes[id % classes.length],
-      militancy: Militancy.STATUSQUO
-    }))
-  }
-
-  static createBalancedCitizens(): Citizen[] {
-    const citizens: Citizen[] = []
-    let id = 0
-
-    for (const socialClass of Object.values(SocialClass)) {
-      for (let i = 0; i < 25; i++) {
-        citizens.push({ id: id++, socialClass, militancy: Militancy.STATUSQUO })
-      }
-    }
-
-    return citizens
   }
 
   static getTotalCitizens(): number {
