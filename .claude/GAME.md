@@ -42,6 +42,27 @@ El juego divide la población en **4 clases sociales** con características dist
 - Cada partida tiene una composición social única (ej: 15% DESPOSEIDOS, 40% OBREROS, 30% CLASE_MEDIA, 15% ELITES)
 - No hay jerarquía funcional implementada (todavía)
 
+### Sistema de Militancia
+
+Cada ciudadano tiene una **militancia política** además de su clase social:
+
+| Militancia | Descripción |
+|-----------|-------------|
+| **FASCISMO** | Ideología autoritaria |
+| **STATUSQUO** | Mantener el orden actual |
+| **ANARQUISMO** | Ideología libertaria |
+
+**Asignación inicial:**
+- Al generar la población, se seleccionan **2 ciudadanos aleatorios**
+- Uno recibe militancia `FASCISMO`, otro `ANARQUISMO`
+- El resto de ciudadanos comienza con `STATUSQUO`
+- Algoritmo en `/src/game/population/militancyAssigner.ts`
+
+**Transiciones de militancia:**
+- Actualmente las transiciones están en placeholder (cada ciudadano mantiene su militancia)
+- Estructura preparada para futuras interacciones entre clase social y militancia
+- Ejemplo futuro: élites más propensas a fascismo, desposeídos más propensos a anarquismo
+
 ### Sistema de Turnos
 
 El juego opera con un **sistema de turnos simple**:
@@ -58,8 +79,19 @@ El juego opera con un **sistema de turnos simple**:
 
 ```typescript
 interface Citizen {
-  id: number           // ID único auto-incremental (empieza en 0)
+  id: number              // ID único auto-incremental (empieza en 0)
   socialClass: SocialClass  // Clase social asignada
+  militancy: Militancy      // Militancia política asignada
+}
+```
+
+### Militancy (Militancia)
+
+```typescript
+enum Militancy {
+  FASCISMO = 'FASCISMO',
+  STATUSQUO = 'STATUSQUO',
+  ANARQUISMO = 'ANARQUISMO'
 }
 ```
 
@@ -98,7 +130,7 @@ interface MatrixDimensions {
 
 ### Generación de Población
 
-**Algoritmo:** `generateCitizens()` en `/src/utils/citizenGenerator.ts`
+**Algoritmo:** `generateCitizens()` en `/src/game/population/citizenGenerator.ts`
 
 1. **Determinar tamaño de población:**
    ```
@@ -138,7 +170,7 @@ interface MatrixDimensions {
 
 ### Cálculo de Dimensiones del Grid
 
-**Algoritmo:** `calculateMatrixDimensions(citizenCount)` en `/src/utils/matrixLayout.ts`
+**Algoritmo:** `useBarrioLayout(citizenCount)` en `/src/components/Barrio/useBarrioLayout.ts`
 
 **Objetivo:** Encontrar distribución de filas/columnas que:
 1. Acomode todos los ciudadanos (`rows × columns >= citizenCount`)
@@ -346,6 +378,21 @@ Esta sección es un **placeholder** para mecánicas que podrían agregarse:
 - Color de fondo según clase social (atributo `data-class`)
 - Props: `citizen: Citizen`
 
+**Statistics** (`/src/components/Statistics/Statistics.tsx`):
+- Muestra distribución de clases sociales
+- Porcentajes visibles, detalles en tooltips
+- Hook interno: `useStatistics` para cálculos
+
+**MilitancyStatistics** (`/src/components/Statistics/MilitancyStatistics.tsx`):
+- Muestra distribución de militancias
+- Misma estructura que Statistics
+- Hook interno: `useMilitancyStatistics`
+
+**GameConsole** (`/src/components/GameConsole/GameConsole.tsx`):
+- Log de eventos del juego
+- Eventos recientes arriba (orden inverso)
+- Props: `logs: GameLog[]`
+
 ### Paleta de Colores (Flexoki Light)
 
 - Background: `#FFFCF0`
@@ -359,22 +406,37 @@ Esta sección es un **placeholder** para mecánicas que podrían agregarse:
 
 ### Archivos Clave
 
-**Modelos:**
-- `/src/models/Citizen.ts` - Definición de Citizen y SocialClass
-- `/src/models/Barrio.ts` - Definición de Barrio y MatrixDimensions
+**Tipos:**
+- `/src/types/Citizen.ts` - Definición de Citizen y SocialClass
+- `/src/types/Barrio.ts` - Definición de Barrio y MatrixDimensions
+- `/src/types/Militancy.ts` - Definición de Militancy enum
+- `/src/types/Action.ts` - Definición de Action y modificadores
 
-**Utilidades:**
-- `/src/game/population/citizenGenerator.ts` - Lógica de generación de población
-- `/src/game/evolution/evolutionProbabilities.ts` - Matriz de transición
+**Lógica de juego (`/src/game/`):**
+- `/src/game/GameEngine.ts` - Clase principal inmutable del motor de juego
+- `/src/game/population/citizenGenerator.ts` - Generación de población
+- `/src/game/population/militancyAssigner.ts` - Asignación de militancia inicial
+- `/src/game/evolution/evolutionProbabilities.ts` - Matriz de transición de clases
 - `/src/game/evolution/evolutionEngine.ts` - Motor de evolución demográfica
 - `/src/game/actions/applyModifiers.ts` - Aplicación de modificadores
 - `/src/game/actions/welfareStateAction.ts` - Acción Estado del Bienestar
+- `/src/game/config/baseProbabilities.ts` - Probabilidades base de transición
+- `/src/game/config/militancyProbabilities.ts` - Probabilidades de transición de militancia
+
+**Contextos:**
+- `/src/contexts/GameEngineContext.tsx` - Contexto React para compartir estado del juego
+
+**Hooks:**
+- `/src/hooks/useGameEngine.ts` - Integración de GameEngine con React
 
 **Componentes:**
-- `/src/components/HomePage/HomePage.tsx` - Componente principal con estado de turno
-- `/src/components/GameControls/GameControls.tsx` - UI de control de turnos
+- `/src/components/HomePage/HomePage.tsx` - Componente principal
+- `/src/components/GameControls/GameControls.tsx` - UI de control de turnos y acciones
 - `/src/components/Barrio/Barrio.tsx` - Grid de ciudadanos
 - `/src/components/Citizen/Citizen.tsx` - Celda individual
+- `/src/components/Statistics/Statistics.tsx` - Estadísticas de clases sociales
+- `/src/components/Statistics/MilitancyStatistics.tsx` - Estadísticas de militancia
+- `/src/components/GameConsole/GameConsole.tsx` - Log de eventos
 
 **Estilos:**
 - `/src/styles/variables.css` - Variables CSS (colores, tipografía)
@@ -382,11 +444,23 @@ Esta sección es un **placeholder** para mecánicas que podrían agregarse:
 
 ### Gestión de Estado
 
-**Actual:**
-- Estado local con `useState` en HomePage
-- `currentTurn: number` - contador de turno
-- `barrio: { citizens, dimensions }` - generado con `useMemo` (inmutable)
+**Arquitectura actual:**
+- `GameEngine` - Clase inmutable que encapsula toda la lógica de negocio
+- `useGameEngine` - Hook que integra GameEngine con React
+- `GameEngineContext` - Contexto React para compartir estado entre componentes
 
-**Futuro:**
-- Considerar Context API cuando haya múltiple estado de juego
-- Potencial migración a useReducer para lógica compleja de turnos
+**Flujo de datos:**
+```
+GameEngine (lógica pura)
+    ↓
+useGameEngine (integración React)
+    ↓
+GameEngineContext.Provider (compartir estado)
+    ↓
+Componentes (consumen via useGameEngineContext)
+```
+
+**Beneficios:**
+- Lógica de negocio independiente de React (testeable sin DOM)
+- Estado compartido sin prop drilling
+- Componentes autónomos que acceden al contexto directamente
