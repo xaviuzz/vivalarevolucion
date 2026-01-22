@@ -13,13 +13,14 @@ export function MilitancyStatistics({ citizens }: MilitancyStatisticsProps) {
   return (
     <div className={styles.container}>
       <ul className={styles.classList}>
-        {byMilitancy.map(({ militancy, count, percentage, trend }) => (
+        {byMilitancy.map(({ militancy, count, percentage, trend, classDistribution }) => (
           <MilitancyStatisticItem
             key={militancy}
             militancy={militancy}
             count={count}
             percentage={percentage}
             trend={trend}
+            classDistribution={classDistribution}
           />
         ))}
       </ul>

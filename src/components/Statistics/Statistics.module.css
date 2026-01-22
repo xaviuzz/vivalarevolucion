@@ -80,6 +80,14 @@
   color: var(--flexoki-tx-2);
 }
 
+/* Barra de distribución de clases sociales */
+.distributionBar {
+  width: 12px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 1px;
+}
+
 /* Indicadores de forma para militancia */
 .shapeIndicator {
   width: 24px;

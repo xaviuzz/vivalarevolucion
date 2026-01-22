@@ -1,5 +1,7 @@
 import { Militancy } from '../../types/Militancy'
 import type { Trend } from './useStatistics'
+import type { ClassDistribution } from './useMilitancyStatistics'
+import { useMilitancyStatisticItem } from './useMilitancyStatisticItem'
 import styles from './Statistics.module.css'
 
 interface MilitancyStatisticItemProps {
@@ -7,35 +9,17 @@ interface MilitancyStatisticItemProps {
   count: number
   percentage: number
   trend: Trend
+  classDistribution: ClassDistribution
 }
 
-function formatPercentage(value: number): string {
-  return `${value.toFixed(1)}%`
-}
-
-function getMilitancyDisplayName(militancy: Militancy): string {
-  const names: Record<Militancy, string> = {
-    [Militancy.FASCISMO]: 'Fascismo',
-    [Militancy.STATUSQUO]: 'Status Quo',
-    [Militancy.ANARQUISMO]: 'Anarquismo'
-  }
-  return names[militancy]
-}
-
-function formatTooltip(militancy: Militancy, count: number): string {
-  return `${getMilitancyDisplayName(militancy)}: ${count}`
-}
-
-function getTrendSymbol(trend: Trend): string {
-  switch (trend) {
-    case 'up': return '▲'
-    case 'down': return '▼'
-    case 'stable': return '—'
-  }
-}
-
-export function MilitancyStatisticItem({ militancy, count, percentage, trend }: MilitancyStatisticItemProps) {
-  const tooltipText = formatTooltip(militancy, count)
+export function MilitancyStatisticItem({ militancy, count, percentage, trend, classDistribution }: MilitancyStatisticItemProps) {
+  const { tooltipText, distributionBarStyle, formattedPercentage, trendSymbol } = useMilitancyStatisticItem(
+    militancy,
+    count,
+    percentage,
+    trend,
+    classDistribution
+  )
 
   return (
     <li
@@ -44,14 +28,18 @@ export function MilitancyStatisticItem({ militancy, count, percentage, trend }: 
       aria-label={tooltipText}
     >
       <span
+        className={styles.distributionBar}
+        style={distributionBarStyle}
+      />
+      <span
         className={styles.shapeIndicator}
         data-militancy={militancy}
       />
       <span className={styles.classValue}>
-        {formatPercentage(percentage)}
+        {formattedPercentage}
       </span>
       <span className={styles.trendIndicator} data-trend={trend}>
-        {getTrendSymbol(trend)}
+        {trendSymbol}
       </span>
     </li>
   )

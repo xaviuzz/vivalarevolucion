@@ -1,13 +1,22 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { Citizen } from '../../types/Citizen'
+import { SocialClass } from '../../types/Citizen'
 import { Militancy, MILITANCIES } from '../../types/Militancy'
 import type { Trend } from './useStatistics'
+
+export interface ClassDistribution {
+  desposeidos: number
+  obreros: number
+  claseMedia: number
+  elites: number
+}
 
 export interface MilitancyStatistic {
   militancy: Militancy
   count: number
   percentage: number
   trend: Trend
+  classDistribution: ClassDistribution
 }
 
 export interface MilitancyStatistics {
@@ -25,6 +34,33 @@ function countCitizensByMilitancy(citizens: Citizen[]): Record<Militancy, number
     counts[citizen.militancy]++
   }
   return counts
+}
+
+function calculateClassDistribution(citizens: Citizen[], militancy: Militancy): ClassDistribution {
+  const militancyCitizens = citizens.filter(c => c.militancy === militancy)
+  const total = militancyCitizens.length
+
+  if (total === 0) {
+    return { desposeidos: 0, obreros: 0, claseMedia: 0, elites: 0 }
+  }
+
+  const counts = {
+    [SocialClass.DESPOSEIDOS]: 0,
+    [SocialClass.OBREROS]: 0,
+    [SocialClass.CLASE_MEDIA]: 0,
+    [SocialClass.ELITES]: 0
+  }
+
+  for (const citizen of militancyCitizens) {
+    counts[citizen.socialClass]++
+  }
+
+  return {
+    desposeidos: (counts[SocialClass.DESPOSEIDOS] / total) * 100,
+    obreros: (counts[SocialClass.OBREROS] / total) * 100,
+    claseMedia: (counts[SocialClass.CLASE_MEDIA] / total) * 100,
+    elites: (counts[SocialClass.ELITES] / total) * 100
+  }
 }
 
 const MILITANCY_ORDER = [
@@ -61,7 +97,8 @@ function calculateMilitancyStatistics(
     const count = militancyCounts[militancy]
     const percentage = total > 0 ? (count / total) * 100 : 0
     const trend = calculateTrend(percentage, previousPercentages.get(militancy))
-    return { militancy, count, percentage, trend }
+    const classDistribution = calculateClassDistribution(citizens, militancy)
+    return { militancy, count, percentage, trend, classDistribution }
   })
 
   return sortByMilitancyOrder(statistics)
