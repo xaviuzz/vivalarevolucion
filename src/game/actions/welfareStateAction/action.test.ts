@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { WELFARE_STATE_ACTION } from './welfareStateAction'
-import { applyActionModifiers } from './applyModifiers'
-import { SocialClass } from '../../types/Citizen'
-import { TRANSITION_PROBABILITIES, TransitionTable } from '../evolution/evolutionProbabilities'
-import { calculateTransitionRate, rowsAreEqual } from '../../test/probability-helpers'
+import { WELFARE_STATE_ACTION } from './action'
+import { applyActionModifiers } from '../applyModifiers'
+import { SocialClass } from '../../../types/Citizen'
+import { TRANSITION_PROBABILITIES, TransitionTable } from '../../evolution/evolutionProbabilities'
+import { calculateTransitionRate, rowsAreEqual } from '../../../test/probability-helpers'
 
 describe('WELFARE_STATE_ACTION', () => {
   describe('estructura de la acción', () => {
@@ -133,6 +133,9 @@ class WelfareStateSUT {
   }
 
   static getModifiers() {
+    if (!WELFARE_STATE_ACTION.modifiers) {
+      throw new Error('WELFARE_STATE_ACTION debe tener modificadores')
+    }
     return WELFARE_STATE_ACTION.modifiers
   }
 

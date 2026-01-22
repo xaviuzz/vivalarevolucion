@@ -461,3 +461,229 @@ describe('GameEngine', () => {
   })
 })
 ```
+
+## Evitar semánticas específicas en código genérico
+
+Las clases de negocio no deben tener conocimiento de instancias específicas. Deben tratar todos los elementos de manera uniforme usando sus propiedades/interfaces.
+
+### ❌ Incorrecto
+
+```typescript
+// GameEngine conoce acciones específicas por nombre
+endTurn(): GameEngine {
+  const evolvedCitizens = this.evolveClasses()
+
+  const proselytismActive = this.activeActions.some(a => a.id === 'proselytism')
+  if (proselytismActive) {
+    evolvedCitizens = this.evolveMilitancyWithProselytism(evolvedCitizens)
+  }
+
+  return new GameEngine({ citizens: evolvedCitizens, ... })
+}
+```
+
+**Problemas:**
+- GameEngine conoce la acción "proselytism" por nombre
+- Cada nueva acción requiere modificar GameEngine
+- Viola Open/Closed Principle
+
+### ✅ Correcto
+
+```typescript
+// GameEngine trata todas las acciones uniformemente
+endTurn(): GameEngine {
+  const evolvedCitizens = this.evolveMilitancy(this.evolveClasses())
+  return new GameEngine({ citizens: evolvedCitizens, ... })
+}
+
+private evolveMilitancy(citizens: Citizen[]): Citizen[] {
+  const actions = this.activeActions.filter(
+    action => action.militancyModifiers || action.calculateMilitancyModifiers
+  )
+
+  if (actions.length === 0) {
+    return citizens
+  }
+
+  return citizens.map(citizen => this.applyMilitancyActions(citizen, citizens, actions))
+}
+```
+
+**Beneficios:**
+- GameEngine es agnóstico a acciones específicas
+- Nuevas acciones funcionan automáticamente si implementan la interfaz
+- Filtrado por capacidades (tiene `militancyModifiers`?) en vez de por identidad (`id === 'proselytism'`)
+
+### Patrón: Modificadores estáticos vs dinámicos
+
+Cuando algunas acciones tienen valores fijos y otras necesitan calcularlos según el estado:
+
+```typescript
+// types/Action.ts
+interface Action {
+  id: string
+  name: string
+  modifiers?: ModifierTable                    // Estático
+  calculateModifiers?: (state: State) => ModifierTable  // Dinámico
+}
+
+// Uso genérico en GameEngine
+const modifiers = action.calculateModifiers
+  ? action.calculateModifiers(currentState)
+  : action.modifiers!
+```
+
+## Organización de acciones específicas en carpetas
+
+Cuando tienes múltiples acciones del juego con lógica asociada, cada acción específica debe tener su propia carpeta. Las utilidades generales permanecen en la raíz.
+
+### ❌ Incorrecto
+
+```
+src/game/actions/
+├── welfareStateAction.ts
+├── welfareStateAction.test.ts
+├── proselytismAction.ts
+├── proselytismAction.test.ts
+├── proselytismCalculator.ts        # Lógica específica mezclada
+├── proselytismCalculator.test.ts
+├── applyModifiers.ts                # Utilidad general
+└── index.ts
+```
+
+**Problemas:**
+- Archivos de acciones específicas mezclados con utilidades generales
+- Difícil distinguir qué archivos pertenecen a qué acción
+- Escala mal cuando hay muchas acciones
+
+### ✅ Correcto
+
+```
+src/game/actions/
+├── welfareStateAction/
+│   ├── action.ts           # Sin prefijo redundante
+│   └── action.test.ts
+├── proselytismAction/
+│   ├── action.ts
+│   ├── action.test.ts
+│   ├── calculator.ts       # Lógica específica de esta acción
+│   └── calculator.test.ts
+├── applyModifiers.ts       # Utilidades generales en raíz
+├── applyModifiers.test.ts
+└── index.ts                # Exporta desde subcarpetas
+```
+
+**Beneficios:**
+- Clara separación entre acciones específicas y utilidades generales
+- Cada acción es una unidad autónoma con su lógica y tests
+- Fácil agregar nuevas acciones sin saturar la carpeta raíz
+- Los nombres de archivo son concisos (la carpeta ya da contexto)
+
+### Estructura de exports
+
+```typescript
+// src/game/actions/index.ts
+export { applyActionModifiers } from './applyModifiers'
+export { WELFARE_STATE_ACTION } from './welfareStateAction/action'
+export { PROSELYTISM_ACTION } from './proselytismAction/action'
+```
+
+## Separar configuración de lógica de negocio
+
+Los valores de configuración (modificadores, probabilidades, constantes del juego) deben estar en `config/`, no embebidos en archivos de lógica.
+
+### ❌ Incorrecto
+
+```typescript
+// game/actions/proselytismAction/calculator.ts
+export const PROSELYTISM_BASE_MODIFIERS: MilitancyModifierTable = {
+  [SocialClass.DESPOSEIDOS]: {
+    [Militancy.ANARQUISMO]: 0.01,
+    [Militancy.STATUSQUO]: -0.01
+  }
+}
+
+export function calculateEffectiveModifiers(citizens: Citizen[]) {
+  const ratio = calculateAnarchistRatio(citizens)
+  // usa PROSELYTISM_BASE_MODIFIERS
+}
+```
+
+**Problemas:**
+- Configuración mezclada con lógica
+- Difícil encontrar y modificar valores de configuración
+- No es evidente qué archivos contienen valores ajustables
+
+### ✅ Correcto
+
+```
+src/game/
+├── config/
+│   └── actions/
+│       ├── proselytism.ts      # export const PROSELYTISM_BASE_MODIFIERS
+│       ├── welfareState.ts     # export const WELFARE_STATE_MODIFIERS
+│       └── index.ts            # Re-exporta todas las configs
+└── actions/
+    └── proselytismAction/
+        ├── action.ts
+        └── calculator.ts       # import { PROSELYTISM_BASE_MODIFIERS } from '../../config/actions'
+```
+
+```typescript
+// config/actions/proselytism.ts
+export const PROSELYTISM_BASE_MODIFIERS: MilitancyModifierTable = {
+  [SocialClass.DESPOSEIDOS]: {
+    [Militancy.ANARQUISMO]: 0.01,
+    [Militancy.STATUSQUO]: -0.01
+  }
+}
+
+// actions/proselytismAction/calculator.ts
+import { PROSELYTISM_BASE_MODIFIERS } from '../../config/actions/proselytism'
+
+export function calculateEffectiveModifiers(citizens: Citizen[]) {
+  const ratio = calculateAnarchistRatio(citizens)
+  // usa PROSELYTISM_BASE_MODIFIERS importado
+}
+```
+
+**Beneficios:**
+- Configuración centralizada y fácil de encontrar
+- Lógica separada de valores ajustables
+- Facilita balance del juego (todos los valores en un lugar)
+- Permite cargar configuración desde archivos externos en el futuro
+
+## Nombres de archivos sin prefijos redundantes
+
+Cuando un archivo está dentro de una carpeta que ya identifica su contexto, no repetir ese contexto en el nombre del archivo.
+
+### ❌ Incorrecto
+
+```
+src/game/actions/proselytismAction/
+├── proselytismAction.ts
+├── proselytismAction.test.ts
+├── proselytismCalculator.ts
+└── proselytismCalculator.test.ts
+```
+
+**Problemas:**
+- Prefijo "proselytism" es redundante (ya está en el nombre de la carpeta)
+- Nombres largos e innecesarios
+- Dificulta lectura de tabs en el editor
+
+### ✅ Correcto
+
+```
+src/game/actions/proselytismAction/
+├── action.ts
+├── action.test.ts
+├── calculator.ts
+└── calculator.test.ts
+```
+
+**Beneficios:**
+- Nombres concisos y legibles
+- La carpeta ya proporciona el contexto necesario
+- Más fácil navegar en el editor
+- Patrón consistente: todas las acciones tienen `action.ts`

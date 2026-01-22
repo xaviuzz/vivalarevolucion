@@ -1,4 +1,5 @@
-import { SocialClass } from './Citizen'
+import { Citizen, SocialClass } from './Citizen'
+import { Militancy } from './Militancy'
 
 export interface TransitionModifier {
   [SocialClass.ELITES]: number
@@ -9,9 +10,21 @@ export interface TransitionModifier {
 
 export type TransitionModifierTable = Record<SocialClass, TransitionModifier>
 
+export interface MilitancyTransitionModifier {
+  [Militancy.FASCISMO]: number
+  [Militancy.STATUSQUO]: number
+  [Militancy.ANARQUISMO]: number
+}
+
+export type MilitancyModifierTable = Record<SocialClass, MilitancyTransitionModifier>
+
+export type MilitancyModifierCalculator = (citizens: Citizen[]) => MilitancyModifierTable
+
 export interface Action {
   id: string
   name: string
   description: string
-  modifiers: TransitionModifierTable
+  modifiers?: TransitionModifierTable
+  militancyModifiers?: MilitancyModifierTable
+  calculateMilitancyModifiers?: MilitancyModifierCalculator
 }

@@ -532,3 +532,52 @@ class EvolveCitizenSUT {
 - Complejidad del loop oculta en SUT
 - Test más legible y mantenible
 - Método reutilizable para otros tests de transición
+
+## Manejar valores undefined en tests con validación explícita
+
+Cuando un valor puede ser `undefined` según TypeScript pero sabes que siempre estará presente en el contexto de tests, validarlo explícitamente en el método SUT con un throw descriptivo.
+
+### ❌ Incorrecto
+
+```typescript
+class WelfareStateSUT {
+  static getModifiers() {
+    // TypeScript error: 'modifiers' is possibly 'undefined'
+    return WELFARE_STATE_ACTION.modifiers
+  }
+}
+
+it('tiene modificadores para todas las clases sociales', () => {
+  const modifiers = WelfareStateSUT.getModifiers()
+  expect(modifiers[SocialClass.ELITES]).toBeDefined()  // ❌ Falla compilación
+})
+```
+
+**Problemas:**
+- Error de compilación TypeScript
+- No maneja el caso undefined explícitamente
+- Mensaje de error no es claro si falla
+
+### ✅ Correcto
+
+```typescript
+class WelfareStateSUT {
+  static getModifiers() {
+    if (!WELFARE_STATE_ACTION.modifiers) {
+      throw new Error('WELFARE_STATE_ACTION debe tener modificadores')
+    }
+    return WELFARE_STATE_ACTION.modifiers
+  }
+}
+
+it('tiene modificadores para todas las clases sociales', () => {
+  const modifiers = WelfareStateSUT.getModifiers()
+  expect(modifiers[SocialClass.ELITES]).toBeDefined()
+})
+```
+
+**Beneficios:**
+- Validación explícita del precondition
+- Mensaje de error descriptivo si falla
+- TypeScript sabe que el retorno no es undefined
+- Test falla rápidamente con mensaje claro

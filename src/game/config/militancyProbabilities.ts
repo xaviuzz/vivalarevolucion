@@ -5,8 +5,8 @@ export type MilitancyTransitionTable = Record<Militancy, number>
 
 /**
  * Probabilidades base de transición de militancia.
- * Por ahora todos se mantienen en su militancia actual (placeholder).
- * Las probabilidades reales se definirán después.
+ * Sin acciones activas, todos mantienen su militancia (matriz identidad).
+ * Solo las acciones pueden cambiar la militancia.
  */
 export const MILITANCY_TRANSITION_PROBABILITIES: Record<Militancy, MilitancyTransitionTable> = {
   [Militancy.FASCISMO]: {

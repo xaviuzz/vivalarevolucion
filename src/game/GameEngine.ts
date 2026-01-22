@@ -1,9 +1,13 @@
-import { Citizen, SocialClass, SOCIAL_CLASSES } from '../types/Citizen'
+import { Citizen } from '../types/Citizen'
 import { Action } from '../types/Action'
+import { ClassDistribution } from '../types/ClassDistribution'
 import { generateCitizens } from './population/citizenGenerator'
 import { evolveCitizens } from './evolution/evolutionEngine'
+import { evolveCitizenMilitancy } from './evolution/militancyEvolutionEngine'
 import { TRANSITION_PROBABILITIES } from './evolution/evolutionProbabilities'
+import { MILITANCY_TRANSITION_PROBABILITIES } from './config/militancyProbabilities'
 import { applyMultipleActions } from './actions/applyModifiers'
+import { applyMilitancyModifiers } from './actions/applyMilitancyModifiers'
 
 export interface GameEngineState {
   citizens: Citizen[]
@@ -48,7 +52,7 @@ export class GameEngine {
   }
 
   activateAction(action: Action): GameEngine {
-    const actionAlreadyActive = this.state.activeActions.some(a => a.id === action.id)
+    const actionAlreadyActive = this.state.activeActions.some(active => active.id === action.id)
     if (actionAlreadyActive) {
       return this
     }
@@ -62,17 +66,12 @@ export class GameEngine {
   deactivateAction(actionId: string): GameEngine {
     return new GameEngine({
       ...this.state,
-      activeActions: this.state.activeActions.filter(a => a.id !== actionId)
+      activeActions: this.state.activeActions.filter(action => action.id !== actionId)
     })
   }
 
   endTurn(): GameEngine {
-    const effectiveProbabilities = applyMultipleActions(
-      TRANSITION_PROBABILITIES,
-      this.state.activeActions
-    )
-
-    const evolvedCitizens = evolveCitizens(this.state.citizens, effectiveProbabilities)
+    const evolvedCitizens = this.evolveMilitancy(this.evolveClasses())
 
     return new GameEngine({
       ...this.state,
@@ -81,22 +80,50 @@ export class GameEngine {
     })
   }
 
+  private evolveClasses(): Citizen[] {
+    const actions = this.state.activeActions.filter(action => action.modifiers)
+    const effectiveProbabilities = applyMultipleActions(
+      TRANSITION_PROBABILITIES,
+      actions
+    )
+    return evolveCitizens(this.state.citizens, effectiveProbabilities)
+  }
+
+  private evolveMilitancy(citizens: Citizen[]): Citizen[] {
+    const actions = this.state.activeActions.filter(
+      action => action.militancyModifiers || action.calculateMilitancyModifiers
+    )
+
+    if (actions.length === 0) {
+      return citizens
+    }
+
+    return citizens.map(citizen => this.applyMilitancyActions(citizen, citizens, actions))
+  }
+
+  private applyMilitancyActions(citizen: Citizen, allCitizens: Citizen[], actions: Action[]): Citizen {
+    let probabilities = MILITANCY_TRANSITION_PROBABILITIES
+
+    for (const action of actions) {
+      const modifiers = action.calculateMilitancyModifiers
+        ? action.calculateMilitancyModifiers(allCitizens)
+        : action.militancyModifiers!
+
+      probabilities = applyMilitancyModifiers(
+        probabilities,
+        modifiers,
+        citizen.socialClass
+      )
+    }
+
+    return evolveCitizenMilitancy(citizen, probabilities)
+  }
+
   getCitizenCount(): number {
     return this.state.citizens.length
   }
 
-  getClassDistribution(): Map<SocialClass, number> {
-    const distribution = new Map<SocialClass, number>()
-
-    for (const socialClass of SOCIAL_CLASSES) {
-      distribution.set(socialClass, 0)
-    }
-
-    for (const citizen of this.state.citizens) {
-      const count = distribution.get(citizen.socialClass) ?? 0
-      distribution.set(citizen.socialClass, count + 1)
-    }
-
-    return distribution
+  getClassDistribution(): ClassDistribution {
+    return ClassDistribution.fromCitizens(this.state.citizens)
   }
 }

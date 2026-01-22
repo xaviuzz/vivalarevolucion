@@ -59,9 +59,9 @@ Cada ciudadano tiene una **militancia política** además de su clase social:
 - Algoritmo en `/src/game/population/militancyAssigner.ts`
 
 **Transiciones de militancia:**
-- Actualmente las transiciones están en placeholder (cada ciudadano mantiene su militancia)
-- Estructura preparada para futuras interacciones entre clase social y militancia
-- Ejemplo futuro: élites más propensas a fascismo, desposeídos más propensos a anarquismo
+- Sin acciones activas, la militancia **no cambia** (matriz identidad)
+- Solo las **acciones de militancia** pueden modificar las probabilidades de transición
+- Cada acción de militancia puede tener efectos diferenciados por clase social
 
 ### Sistema de Turnos
 
@@ -267,6 +267,15 @@ TRANSITION_PROBABILITIES = {
 
 Las **acciones** son políticas que modifican las probabilidades de transición. Se activan/desactivan con checkboxes en la UI.
 
+**Tipos de acciones:**
+
+| Tipo | Campo | Afecta |
+|------|-------|--------|
+| Clase social | `modifiers` | Probabilidades de cambio entre clases sociales |
+| Militancia | `militancyModifiers` | Probabilidades de cambio entre militancias |
+
+Una acción puede tener uno o ambos tipos de modificadores.
+
 **Estructura de una acción:**
 
 ```typescript
@@ -274,7 +283,8 @@ interface Action {
   id: string
   name: string
   description: string
-  modifiers: TransitionModifierTable  // Misma estructura que probabilidades
+  modifiers?: TransitionModifierTable      // Modificadores de clase social (opcional)
+  militancyModifiers?: MilitancyModifierTable  // Modificadores de militancia (opcional)
 }
 ```
 
@@ -284,21 +294,46 @@ interface Action {
 2. Se aplica clamp mínimo (0.000001) para evitar valores negativos
 3. Se normaliza cada fila para que sume 1.0
 
-**Ejemplo - Estado del Bienestar:**
+**Modificadores dinámicos:**
+
+Algunas acciones tienen efectividad que depende del estado actual del juego. Patrón:
+- Definir `BASE_MODIFIERS` (constantes)
+- Implementar `calculateEffectiveModifiers(citizens)` que escala los base según el estado
+
+**Acciones implementadas:**
+
+#### Estado del Bienestar (`welfare-state`)
+
+Acción de **clase social** que mejora movilidad de clases bajas.
 
 ```typescript
 WELFARE_STATE_MODIFIERS = {
-  ELITES: { 0, 0, 0, 0 },           // Sin cambios
-  CLASE_MEDIA: { 0, +0.05, -0.03, -0.02 },  // Más estabilidad
-  OBREROS: { 0, +0.03, +0.02, -0.05 },      // Menos caída
-  DESPOSEIDOS: { +0.00001, +0.02, +0.08, -0.10 }  // Más ascenso
+  ELITES: { 0, 0, 0, 0 },
+  CLASE_MEDIA: { 0, +0.05, -0.03, -0.02 },
+  OBREROS: { 0, +0.03, +0.02, -0.05 },
+  DESPOSEIDOS: { +0.00001, +0.02, +0.08, -0.10 }
 }
 ```
 
-**Efecto:** Mejora movilidad de clases bajas, estabiliza clase media, no afecta élites.
+#### Proselitismo (`proselytism`)
 
-**Acciones implementadas:**
-- `welfare-state`: Estado del Bienestar
+Acción de **militancia** que aumenta probabilidad de militancia anarquista.
+
+**Modificadores base por clase social:**
+
+| Clase | Incremento ANARQUISMO |
+|-------|----------------------|
+| DESPOSEIDOS | +1.0% |
+| OBREROS | +0.75% |
+| CLASE_MEDIA | +0.5% |
+| ELITES | +0.25% |
+
+**Fórmula de efectividad:**
+```
+modificador_efectivo = modificador_base × (anarquistas / población_total)
+```
+
+**Comportamiento:** Más efectivo cuantos más anarquistas haya (más gente haciendo proselitismo). Con pocos anarquistas, el efecto es mínimo.
 
 ## 5. Mecánicas Futuras (No Implementadas)
 
@@ -418,10 +453,14 @@ Esta sección es un **placeholder** para mecánicas que podrían agregarse:
 - `/src/game/population/militancyAssigner.ts` - Asignación de militancia inicial
 - `/src/game/evolution/evolutionProbabilities.ts` - Matriz de transición de clases
 - `/src/game/evolution/evolutionEngine.ts` - Motor de evolución demográfica
-- `/src/game/actions/applyModifiers.ts` - Aplicación de modificadores
+- `/src/game/evolution/militancyEvolutionEngine.ts` - Motor de evolución de militancia
+- `/src/game/actions/applyModifiers.ts` - Aplicación de modificadores de clase social
+- `/src/game/actions/applyMilitancyModifiers.ts` - Aplicación de modificadores de militancia
 - `/src/game/actions/welfareStateAction.ts` - Acción Estado del Bienestar
+- `/src/game/actions/proselytismAction.ts` - Acción Proselitismo
+- `/src/game/services/proselytismCalculator.ts` - Cálculo de modificadores dinámicos de proselitismo
 - `/src/game/config/baseProbabilities.ts` - Probabilidades base de transición
-- `/src/game/config/militancyProbabilities.ts` - Probabilidades de transición de militancia
+- `/src/game/config/militancyProbabilities.ts` - Probabilidades de transición de militancia (matriz identidad)
 
 **Contextos:**
 - `/src/contexts/GameEngineContext.tsx` - Contexto React para compartir estado del juego

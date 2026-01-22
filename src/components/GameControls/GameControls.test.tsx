@@ -105,6 +105,6 @@ class SUT {
   }
 
   static getWelfareCheckbox(): HTMLElement {
-    return screen.getByRole('checkbox')
+    return screen.getByRole('checkbox', { name: /estado del bienestar/i })
   }
 }
