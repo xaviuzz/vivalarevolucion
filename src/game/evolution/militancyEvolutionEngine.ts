@@ -1,5 +1,5 @@
-import { Citizen, SocialClass } from '../../types/Citizen'
-import { Militancy, MILITANCIES } from '../../types/Militancy'
+import { Citizen } from '../../types/Citizen'
+import { Militancy } from '../../types/Militancy'
 import { MilitancyTransitionTable, MILITANCY_TRANSITION_PROBABILITIES } from '../config/militancyProbabilities'
 
 const MILITANCY_ORDER = [

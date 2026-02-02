@@ -43,6 +43,10 @@ export function applyActionModifiers(
   baseProbabilities: Record<SocialClass, TransitionTable>,
   action: Action
 ): Record<SocialClass, TransitionTable> {
+  if (!action.modifiers) {
+    return baseProbabilities
+  }
+
   const modified = {} as Record<SocialClass, TransitionTable>
 
   for (const socialClass of SOCIAL_CLASSES) {
