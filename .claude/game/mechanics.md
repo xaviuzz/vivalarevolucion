@@ -204,7 +204,7 @@ Acción de **militancia** que aumenta probabilidad de militancia anarquista.
 
 **Fórmula de efectividad:**
 ```
-modificador_efectivo = modificador_base × (anarquistas / población_total)
+modificador_efectivo = modificador_base × sqrt(anarquistas / población_total)
 ```
 
-**Comportamiento:** Más efectivo cuantos más anarquistas haya (más gente haciendo proselitismo). Con pocos anarquistas, el efecto es mínimo.
+**Comportamiento:** Más efectivo cuantos más anarquistas haya (más gente haciendo proselitismo). El efecto escala de forma cóncava: se potencia al inicio cuando los anarquistas son pocos, y se estabiliza a medida que se acerca al 100%.

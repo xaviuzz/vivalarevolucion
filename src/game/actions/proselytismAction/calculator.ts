@@ -13,15 +13,16 @@ export function calculateAnarchistRatio(citizens: Citizen[]): number {
 
 export function calculateEffectiveModifiers(citizens: Citizen[]): MilitancyModifierTable {
   const ratio = calculateAnarchistRatio(citizens)
+  const scalingFactor = Math.sqrt(ratio)
 
   const effectiveModifiers = {} as MilitancyModifierTable
 
   for (const socialClass of SOCIAL_CLASSES) {
     const baseRow = PROSELYTISM_BASE_MODIFIERS[socialClass]
     effectiveModifiers[socialClass] = {
-      [Militancy.FASCISMO]: baseRow[Militancy.FASCISMO] * ratio,
-      [Militancy.STATUSQUO]: baseRow[Militancy.STATUSQUO] * ratio,
-      [Militancy.ANARQUISMO]: baseRow[Militancy.ANARQUISMO] * ratio
+      [Militancy.FASCISMO]: baseRow[Militancy.FASCISMO] * scalingFactor,
+      [Militancy.STATUSQUO]: baseRow[Militancy.STATUSQUO] * scalingFactor,
+      [Militancy.ANARQUISMO]: baseRow[Militancy.ANARQUISMO] * scalingFactor
     }
   }
 

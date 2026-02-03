@@ -53,12 +53,12 @@ describe('calculateAnarchistRatio', () => {
 })
 
 describe('calculateEffectiveModifiers', () => {
-  it('escala los modificadores base por el ratio de anarquistas', () => {
+  it('escala los modificadores base por la raiz cuadrada del ratio de anarquistas', () => {
     const citizens = AnarchistRatioSUT.createPopulationWithAnarchists(100, 50)
 
     const effectiveModifiers = calculateEffectiveModifiers(citizens)
 
-    expect(effectiveModifiers[SocialClass.DESPOSEIDOS][Militancy.ANARQUISMO]).toBe(0.005)
+    expect(effectiveModifiers[SocialClass.DESPOSEIDOS][Militancy.ANARQUISMO]).toBe(0.01 * Math.sqrt(0.5))
   })
 
   it('modificadores son cero cuando no hay anarquistas', () => {
