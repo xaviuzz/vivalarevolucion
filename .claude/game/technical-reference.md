@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🎮💻 -->
-
 # Referencias Técnicas
 
 ## Modelos de Datos

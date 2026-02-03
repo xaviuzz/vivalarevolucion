@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🎨📐 -->
-
 # Estructura y Jerarquía del Dominio
 
 ## Ordenamiento por jerarquía del dominio

@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🎮⚙️ -->
-
 # Mecánicas del Juego
 
 ## Generación de Población
@@ -208,3 +206,23 @@ modificador_efectivo = modificador_base × sqrt(anarquistas / población_total)
 ```
 
 **Comportamiento:** Más efectivo cuantos más anarquistas haya (más gente haciendo proselitismo). El efecto escala de forma cóncava: se potencia al inicio cuando los anarquistas son pocos, y se estabiliza a medida que se acerca al 100%.
+
+#### Propaganda (`propaganda`)
+
+Acción de **militancia** que aumenta probabilidad de militancia anarquista, concentrada en las clases altas.
+
+**Modificadores base por clase social:**
+
+| Clase | Incremento ANARQUISMO |
+|-------|----------------------|
+| DESPOSEIDOS | 0% |
+| OBREROS | 0% |
+| CLASE_MEDIA | +1.0% |
+| ELITES | +1.0% |
+
+**Fórmula de efectividad:**
+```
+modificador_efectivo = modificador_base × (anarquistas / población_total)
+```
+
+**Comportamiento:** Más cara que el proselitismo: requiere más anarquistas en la población para ser efectiva. El escalado es lineal (no cóncavo), lo que significa que a ratios bajos de anarquistas es menos efectiva que el proselitismo, pero se vuelve superior a partir de ~25% de anarquistas. No afecta a las clases bajas (DESPOSEIDOS y OBREROS).

@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🎨💡 -->
-
 # Comportamiento e Interacción
 
 ## Controles anclados al elemento que controlan

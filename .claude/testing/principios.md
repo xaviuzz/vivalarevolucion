@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🧪🔬 -->
-
 # Principios de Testing
 
 ## Principios generales

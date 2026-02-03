@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 💻✨ -->
-
 # Funciones Limpias
 
 ## No usar comentarios

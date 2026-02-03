@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🧪🎯 -->
-
 # Patrón SUT (Subject Under Test)
 
 Extrae todos los detalles de implementación de los tests a una clase `SUT` que encapsula las interacciones con el sistema bajo prueba. Los tests deben leer como especificaciones de comportamiento.

@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🏛📁 -->
-
 # Estructura de Carpetas
 
 ## Organización de carpetas por responsabilidad

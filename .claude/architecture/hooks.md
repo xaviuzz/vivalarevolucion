@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🏛🪝 -->
-
 # Hooks Personalizados
 
 Los hooks personalizados deben encapsular estado y lógica relacionada, retornando una interfaz clara y cohesiva.

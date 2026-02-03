@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 💻⚛️ -->
-
 # Patrones React
 
 ## Extraer inline styles a variables

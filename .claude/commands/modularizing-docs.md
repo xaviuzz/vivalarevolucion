@@ -20,13 +20,9 @@ Divide archivos de documentacion grandes en modulos tematicos con un indice prin
    - Reemplazar archivo original con indice
 5. Verificar integridad y links
 
-## Patron de comentarios HTML
+## Comentarios HTML
 
-Cada archivo modular comienza con:
-
-```html
-<!-- @claude: Al leer este archivo, emite los emojis XX -->
-```
+Cada archivo modular puede comenzar con un comentario HTML de contexto sobre su contenido.
 
 ## Resultado esperado
 

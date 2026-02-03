@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🏛⚙️ -->
-
 # Lógica de Negocio
 
 ## Clases de lógica de negocio (GameEngine pattern)

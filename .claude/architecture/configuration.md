@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🏛🎛️ -->
-
 # Configuración
 
 ## Separar configuración de lógica de negocio

@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 🎨🎭 -->
-
 # Presentación Visual
 
 ## Minimalismo y eliminación de decoración innecesaria

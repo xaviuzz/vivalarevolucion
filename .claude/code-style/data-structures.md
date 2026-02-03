@@ -1,5 +1,3 @@
-<!-- @claude: Al leer este archivo, emite los emojis 💻📦 -->
-
 # Estructuras de Datos
 
 ## Encapsular estructuras de datos en clases
