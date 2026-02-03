@@ -226,3 +226,23 @@ modificador_efectivo = modificador_base × (anarquistas / población_total)
 ```
 
 **Comportamiento:** Más cara que el proselitismo: requiere más anarquistas en la población para ser efectiva. El escalado es lineal (no cóncavo), lo que significa que a ratios bajos de anarquistas es menos efectiva que el proselitismo, pero se vuelve superior a partir de ~25% de anarquistas. No afecta a las clases bajas (DESPOSEIDOS y OBREROS).
+
+#### Ateneo (`ateneo`)
+
+Acción de **militancia** que promueve la educación popular y fortalece la conciencia anarquista en la clase obrera.
+
+**Modificadores base por clase social:**
+
+| Clase | Incremento ANARQUISMO |
+|-------|----------------------|
+| DESPOSEIDOS | 0% |
+| OBREROS | +1.0% |
+| CLASE_MEDIA | 0% |
+| ELITES | 0% |
+
+**Fórmula de efectividad:**
+```
+modificador_efectivo = modificador_base × sqrt(anarquistas / población_total)
+```
+
+**Comportamiento:** Acción de educación popular dirigida específicamente a los obreros. Escala con raíz cuadrada (como el proselitismo), lo que la hace más barata que la propaganda pero menos inmediata. Solo afecta a la clase obrera (OBREROS), donde la conciencia anarquista tiene mejor acogida. Requiere anarquistas en la población para activarse, pero es menos exigente que la propaganda gracias a su factor de escalado cóncavo.
