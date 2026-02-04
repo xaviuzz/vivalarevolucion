@@ -60,3 +60,7 @@ Cada guía debe:
 - Usar ejemplos ❌ incorrecto / ✅ correcto
 - Incluir sección de "Beneficios" explicando el porqué
 - Estar enlazada desde este archivo índice
+
+## Workflow de Git
+
+⚠️ **IMPORTANTE:** Claude nunca debe crear commits automáticamente. El usuario debe hacerlo manualmente cuando considere que los cambios están listos. Solo ejecutar comandos de git para consultar estado (`git status`, `git diff`, `git log`), nunca para crear commits.

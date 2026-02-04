@@ -246,3 +246,23 @@ modificador_efectivo = modificador_base × sqrt(anarquistas / población_total)
 ```
 
 **Comportamiento:** Acción de educación popular dirigida específicamente a los obreros. Escala con raíz cuadrada (como el proselitismo), lo que la hace más barata que la propaganda pero menos inmediata. Solo afecta a la clase obrera (OBREROS), donde la conciencia anarquista tiene mejor acogida. Requiere anarquistas en la población para activarse, pero es menos exigente que la propaganda gracias a su factor de escalado cóncavo.
+
+#### Corrupción (`corruption`)
+
+Acción de **militancia** que representa cómo las élites sucumben a la corrupción y tienden hacia el fascismo.
+
+**Modificadores base por clase social:**
+
+| Clase | Cambio FASCISMO | Cambio STATUSQUO |
+|-------|-----------------|------------------|
+| DESPOSEIDOS | 0% | 0% |
+| OBREROS | 0% | 0% |
+| CLASE_MEDIA | 0% | 0% |
+| ELITES | +20% | -20% |
+
+**Fórmula de efectividad:**
+```
+modificador_efectivo = modificador_base × (fascistas / población_total)
+```
+
+**Comportamiento:** Acción ideológica que muestra cómo las élites, una vez que la corrupción permea la sociedad, tienden naturalmente hacia el fascismo como mecanismo de control y preservación de su poder. El efecto es concentrado exclusivamente en la clase elite, transformando ciudadanos STATUSQUO en FASCISMO. Escala de forma lineal con el ratio de fascistas existentes: requiere una proporción significativa de fascistas para ser efectiva. A ratios bajos de fascismo, el efecto es débil; a partir de ~20-25% de fascistas, se vuelve una fuerza importante. Menos inmediata que proselitismo o ateneo, pero cuando los fascistas alcanzan masa crítica, la corrupción de las élites puede convertirse en un bucle de retroalimentación.

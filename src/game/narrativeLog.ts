@@ -19,11 +19,7 @@ export interface SocialChange {
   diff: number
 }
 
-/**
- * Finds the dominant social class change by comparing before/after populations.
- * When a class gains significantly, growth dominates shrinkage in the narrative.
- * Returns null if no changes.
- */
+
 export function getDominantSocialChange(
   before: Citizen[],
   after: Citizen[]
@@ -34,19 +30,18 @@ export function getDominantSocialChange(
   let bestGainer: SocialChange | null = null
   let bestLoser: SocialChange | null = null
 
-  for (const sc of SOCIAL_CLASS_PRIORITY) {
-    const diff = (afterCounts.get(sc) ?? 0) - (beforeCounts.get(sc) ?? 0)
+  for (const socialClass of SOCIAL_CLASS_PRIORITY) {
+    const diff = (afterCounts.get(socialClass) ?? 0) - (beforeCounts.get(socialClass) ?? 0)
 
     if (diff > 0 && (bestGainer === null || diff > bestGainer.diff)) {
-      bestGainer = { socialClass: sc, diff }
+      bestGainer = { socialClass: socialClass, diff }
     }
 
     if (diff < 0 && (bestLoser === null || Math.abs(diff) > Math.abs(bestLoser.diff))) {
-      bestLoser = { socialClass: sc, diff }
+      bestLoser = { socialClass: socialClass, diff }
     }
   }
 
-  // Prefer gainer; if equal absolute values, gainer wins
   if (bestGainer && bestLoser) {
     return bestGainer.diff >= Math.abs(bestLoser.diff) ? bestGainer : bestLoser
   }
@@ -54,10 +49,7 @@ export function getDominantSocialChange(
   return bestGainer ?? bestLoser
 }
 
-/**
- * Finds which militancy grew the most (ANARQUISMO or FASCISMO).
- * Returns null if neither grew.
- */
+
 export function getDominantMilitancyGrowth(
   before: Citizen[],
   after: Citizen[]
@@ -68,21 +60,17 @@ export function getDominantMilitancyGrowth(
   const growingMilitancies = [Militancy.ANARQUISMO, Militancy.FASCISMO] as const
   let dominant: { militancy: Militancy; diff: number } | null = null
 
-  for (const m of growingMilitancies) {
-    const diff = (afterCounts.get(m) ?? 0) - (beforeCounts.get(m) ?? 0)
+  for (const militancy of growingMilitancies) {
+    const diff = (afterCounts.get(militancy) ?? 0) - (beforeCounts.get(militancy) ?? 0)
     if (diff <= 0) continue
     if (dominant === null || diff > dominant.diff) {
-      dominant = { militancy: m, diff }
+      dominant = { militancy: militancy, diff }
     }
   }
 
   return dominant?.militancy ?? null
 }
 
-/**
- * Generates a narrative description of the turn based on citizen changes.
- * If both social and militancy change, combines two phrases separated by ". "
- */
 export function generateNarrativeLog(before: Citizen[], after: Citizen[]): string {
   const socialChange = getDominantSocialChange(before, after)
   const militancyGrowth = getDominantMilitancyGrowth(before, after)
