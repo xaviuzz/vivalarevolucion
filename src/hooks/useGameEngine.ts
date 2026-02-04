@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
-import { Citizen, SOCIAL_CLASSES } from '../types/Citizen'
+import { Citizen } from '../types/Citizen'
 import { Action } from '../types/Action'
 import { GameEngine } from '../game/GameEngine'
-import { countByClass } from '../utils/citizenUtils'
+import { generateNarrativeLog } from '../game/narrativeLog'
 
 export interface GameLog {
   turn: number
@@ -19,21 +19,6 @@ export interface GameEngineHook {
   deactivateAction: (actionId: string) => void
 }
 
-function generateTurnLog(before: Citizen[], after: Citizen[]): string {
-  const beforeCounts = countByClass(before)
-  const afterCounts = countByClass(after)
-
-  const changes: string[] = []
-  for (const sc of SOCIAL_CLASSES) {
-    const diff = (afterCounts.get(sc) ?? 0) - (beforeCounts.get(sc) ?? 0)
-    if (diff !== 0) {
-      changes.push(`${sc}: ${diff > 0 ? '+' : ''}${diff}`)
-    }
-  }
-
-  return changes.length > 0 ? changes.join(', ') : 'Sin cambios'
-}
-
 export function useGameEngine(): GameEngineHook {
   const [engine, setEngine] = useState<GameEngine>(() => GameEngine.createNew())
   const [logs, setLogs] = useState<GameLog[]>([])
@@ -44,7 +29,7 @@ export function useGameEngine(): GameEngineHook {
     const newEngine = engine.endTurn()
     const afterCitizens = newEngine.getCitizens()
 
-    const message = generateTurnLog(beforeCitizens, afterCitizens)
+    const message = generateNarrativeLog(beforeCitizens, afterCitizens)
     setLogs(prevLogs => [...prevLogs, { turn, message }])
     setEngine(newEngine)
   }, [engine])
